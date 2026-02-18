@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Physics Lab Quiz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap');
+
+:root {
+  --bg:        #08090f;
+  --surface:   #0e1220;
+  --panel:     #111827;
+  --border:    rgba(99,210,255,0.18);
+  --accent:    #3de8ff;
+  --accent2:   #ffe94d;
+  --accent3:   #ff6b9d;
+  --green:     #2dffa0;
+  --red:       #ff4d6d;
+  --text:      #e8f0fe;
+  --muted:     #6b7a99;
+  --glow:      0 0 18px rgba(61,232,255,0.45);
+  --glow-gold: 0 0 18px rgba(255,233,77,0.5);
+  --glow-red:  0 0 18px rgba(255,77,109,0.45);
+  --glow-green:0 0 18px rgba(45,255,160,0.45);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'Exo 2', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(61,232,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(61,232,255,0.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+  animation: gridDrift 20s linear infinite;
+}
+@keyframes gridDrift {
+  from { background-position: 0 0; }
+  to   { background-position: 44px 44px; }
+}
+
+.formula-bg {
+  position: fixed; inset: 0; z-index: 0;
+  overflow: hidden; pointer-events: none;
+}
+.formula-particle {
+  position: absolute;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  color: rgba(61,232,255,0.08);
+  animation: floatUp linear infinite;
+  white-space: nowrap;
+}
+@keyframes floatUp {
+  from { transform: translateY(110vh) rotate(-8deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  to   { transform: translateY(-10vh) rotate(8deg); opacity: 0; }
+}
+
+.container {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 740px;
+  padding: 16px;
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ---- MENU ---- */
+#menuScreen { text-align: center; }
+
+.lab-icon {
+  font-size: 4rem; display: block;
+  filter: drop-shadow(0 0 20px rgba(61,232,255,0.7));
+  animation: iconBob 2.5s ease-in-out infinite;
+  margin-bottom: 4px;
+}
+@keyframes iconBob {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+.menu-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 2.8rem; font-weight: 900;
+  color: var(--accent); text-shadow: var(--glow);
+  letter-spacing: 4px; line-height: 1; margin-bottom: 4px;
+}
+.menu-subtitle {
+  font-size: 0.9rem; color: var(--muted);
+  letter-spacing: 3px; text-transform: uppercase; margin-bottom: 26px;
+}
+
+.topic-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 11px; margin-bottom: 22px;
+}
+.topic-card {
+  background: var(--panel); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 15px 10px; cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  position: relative; overflow: hidden;
+}
+.topic-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 60%, rgba(61,232,255,0.05));
+  border-radius: inherit;
+}
+.topic-card:hover { transform: translateY(-4px) scale(1.03); }
+.topic-card:active { transform: scale(0.97); }
+.topic-card.selected { border-color: var(--accent) !important; box-shadow: var(--glow) !important; }
+.tc-emoji { font-size: 1.9rem; display:block; margin-bottom:5px; }
+.tc-name {
+  font-family: 'Orbitron', monospace; font-size: 0.62rem;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;
+}
+.tc-count { font-size: 0.68rem; color: var(--muted); }
+
+.menu-play-btn {
+  font-family: 'Orbitron', monospace; font-size: 1rem; font-weight: 900;
+  letter-spacing: 3px; background: linear-gradient(135deg, var(--accent), #0099cc);
+  color: #000; border: none; border-radius: 14px;
+  padding: 16px 50px; cursor: pointer; box-shadow: var(--glow);
+  transition: transform 0.12s, box-shadow 0.12s;
+  text-transform: uppercase; margin-bottom: 11px; display: block; width: 100%;
+}
+.menu-play-btn:hover { transform: translateY(-3px); box-shadow: 0 0 36px rgba(61,232,255,0.7); }
+.menu-play-btn:active { transform: scale(0.97); }
+
+.menu-mix-btn {
+  font-family: 'Orbitron', monospace; font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 2px; background: transparent;
+  border: 1.5px solid var(--accent2); color: var(--accent2); border-radius: 12px;
+  padding: 11px 36px; cursor: pointer; box-shadow: var(--glow-gold);
+  transition: transform 0.12s, background 0.15s;
+  text-transform: uppercase; display: block; width: 100%;
+}
+.menu-mix-btn:hover { background: rgba(255,233,77,0.1); transform: translateY(-2px); }
+
+/* ---- QUIZ ---- */
+#quizScreen { text-align: center; }
+
+.quiz-hud {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.hud-topic {
+  font-family: 'Orbitron', monospace; font-size: 0.68rem; font-weight: 700;
+  color: var(--accent); letter-spacing: 2px; text-transform: uppercase;
+  background: rgba(61,232,255,0.08); border: 1px solid var(--border);
+  border-radius: 7px; padding: 4px 10px;
+}
+.hud-score {
+  font-family: 'Orbitron', monospace; font-size: 0.95rem; font-weight: 900;
+  color: var(--accent2); text-shadow: var(--glow-gold); margin-left: auto;
+}
+.hud-lives { font-size: 1rem; letter-spacing: 1px; }
+
+.progress-wrap {
+  background: rgba(255,255,255,0.06); border-radius: 99px; height: 5px;
+  margin-bottom: 15px; overflow: hidden; border: 1px solid var(--border);
+}
+.progress-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: var(--glow);
+  transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.question-card {
+  background: var(--panel); border: 1.5px solid var(--border);
+  border-radius: 18px; padding: 24px 24px 18px;
+  margin-bottom: 14px; position: relative; overflow: hidden;
+  animation: cardIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes cardIn {
+  from { transform: translateY(18px) scale(0.97); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+.question-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+}
+
+.q-meta {
+  font-size: 0.65rem; font-weight: 700; color: var(--muted);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.q-num {
+  font-family: 'Orbitron', monospace; font-size: 0.62rem; color: var(--accent);
+  background: rgba(61,232,255,0.1); border-radius: 5px; padding: 1px 7px;
+}
+.q-formula {
+  font-family: 'Orbitron', monospace; font-size: 1.3rem; font-weight: 700;
+  color: var(--accent2); text-shadow: var(--glow-gold);
+  margin: 8px 0 12px; letter-spacing: 2px; min-height: 0;
+}
+.q-image {
+  font-size: 3rem; margin: 4px 0; filter: drop-shadow(0 0 10px rgba(61,232,255,0.3));
+  display: block;
+}
+.q-text { font-size: 1rem; font-weight: 600; color: var(--text); line-height: 1.5; }
+
+.timer-wrap {
+  background: rgba(255,255,255,0.06); border-radius: 99px;
+  height: 4px; margin-top: 14px; overflow: hidden;
+}
+.timer-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+  transition: width linear, background 0.5s;
+}
+
+.answers-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 9px; margin-bottom: 13px;
+}
+.answer-btn {
+  background: var(--surface); border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 13px; padding: 14px 12px; cursor: pointer;
+  font-family: 'Exo 2', sans-serif; font-size: 0.88rem; font-weight: 600;
+  color: var(--text); text-align: left;
+  transition: transform 0.12s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  position: relative; overflow: hidden; line-height: 1.35;
+}
+.answer-btn::before {
+  content: attr(data-letter);
+  position: absolute; top: 8px; right: 10px;
+  font-family: 'Orbitron', monospace; font-size: 0.6rem; font-weight: 900;
+  color: var(--muted); transition: color 0.15s;
+}
+.answer-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  border-color: var(--accent); background: rgba(61,232,255,0.07);
+  box-shadow: var(--glow);
+}
+.answer-btn:hover:not(:disabled)::before { color: var(--accent); }
+.answer-btn:disabled { cursor: default; }
+.answer-btn.correct {
+  border-color: var(--green); background: rgba(45,255,160,0.12);
+  box-shadow: var(--glow-green);
+  animation: correctPop 0.4s cubic-bezier(0.17,0.89,0.32,1.49) both;
+}
+.answer-btn.wrong {
+  border-color: var(--red); background: rgba(255,77,109,0.1);
+  box-shadow: var(--glow-red); animation: wrongShake 0.4s both;
+}
+.answer-btn.reveal-correct {
+  border-color: var(--green); background: rgba(45,255,160,0.06);
+}
+@keyframes correctPop {
+  0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); }
+}
+@keyframes wrongShake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-7px); }
+  40%     { transform: translateX(7px); }
+  60%     { transform: translateX(-4px); }
+  80%     { transform: translateX(4px); }
+}
+
+.feedback-bar {
+  border-radius: 11px; padding: 9px 14px;
+  font-size: 0.84rem; font-weight: 600;
+  margin-bottom: 10px; display: none;
+  align-items: center; gap: 10px;
+  animation: feedIn 0.3s ease both; line-height: 1.4; text-align: left;
+}
+@keyframes feedIn {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.feedback-bar.correct-fb {
+  display: flex; background: rgba(45,255,160,0.1);
+  border: 1px solid var(--green); color: var(--green);
+}
+.feedback-bar.wrong-fb {
+  display: flex; background: rgba(255,77,109,0.1);
+  border: 1px solid var(--red); color: #ff8fab;
+}
+.fb-icon { font-size: 1.3rem; flex-shrink: 0; }
+.fb-explanation { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+
+.next-btn {
+  font-family: 'Orbitron', monospace; font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  background: linear-gradient(135deg, var(--accent), #0099cc);
+  color: #000; border: none; border-radius: 11px;
+  padding: 12px 34px; cursor: pointer; box-shadow: var(--glow);
+  transition: transform 0.12s; display: none;
+}
+.next-btn.visible { display: inline-block; animation: feedIn 0.3s both; }
+.next-btn:hover { transform: translateY(-2px); }
+
+.quiz-back-btn {
+  font-size: 0.7rem; color: var(--muted);
+  background: none; border: none; cursor: pointer;
+  font-family: 'Exo 2', sans-serif; padding: 4px 10px; transition: color 0.15s;
+}
+.quiz-back-btn:hover { color: var(--accent); }
+
+/* ---- RESULTS ---- */
+#resultsScreen { text-align: center; }
+
+.results-trophy {
+  font-size: 5rem; display: block; margin-bottom: 10px;
+  filter: drop-shadow(0 0 24px rgba(255,233,77,0.6));
+  animation: trophySpin 1.2s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes trophySpin {
+  from { transform: scale(0) rotate(-180deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.results-title {
+  font-family: 'Orbitron', monospace; font-size: 1.9rem; font-weight: 900; margin-bottom: 4px;
+}
+.results-subtitle { color: var(--muted); font-size: 0.87rem; margin-bottom: 22px; }
+
+.score-display {
+  background: var(--panel); border: 1.5px solid var(--border);
+  border-radius: 18px; padding: 20px; margin-bottom: 16px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+}
+.score-stat .ss-val {
+  font-family: 'Orbitron', monospace; font-size: 1.9rem; font-weight: 900; display: block;
+}
+.score-stat .ss-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+.star-row { margin-bottom: 16px; font-size: 2rem; letter-spacing: 6px; }
+
+.grade-bar-wrap {
+  background: rgba(255,255,255,0.05); border-radius: 99px; height: 9px;
+  margin-bottom: 20px; overflow: hidden; border: 1px solid var(--border);
+}
+.grade-bar-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: var(--glow);
+  transition: width 1.2s cubic-bezier(0.34,1.56,0.64,1);
+  width: 0%;
+}
+
+.results-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.res-btn {
+  font-family: 'Orbitron', monospace; font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  border-radius: 12px; padding: 13px; cursor: pointer; border: none;
+  transition: transform 0.12s;
+}
+.res-btn:hover { transform: translateY(-2px); }
+.res-btn-retry { background: linear-gradient(135deg,var(--accent),#0099cc); color:#000; box-shadow:var(--glow); }
+.res-btn-menu { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); }
+
+/* Confetti & score pop */
+.confetti-wrap { position: fixed; inset: 0; pointer-events: none; z-index: 10; overflow: hidden; }
+.conf { position: absolute; width: 9px; height: 9px; border-radius: 2px; animation: confettiFall linear forwards; }
+@keyframes confettiFall {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+.score-pop {
+  position: fixed; font-family: 'Orbitron', monospace;
+  font-size: 1.2rem; font-weight: 900; pointer-events: none; z-index: 20;
+  animation: scorePop 1.1s ease forwards;
+}
+@keyframes scorePop {
+  0%   { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-75px); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="formula-bg" id="formulaBg"></div>
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<div class="container">
+
+<!-- ==================== MENU ==================== -->
+<div id="menuScreen" class="screen active">
+  <span class="lab-icon">⚡</span>
+  <div class="menu-title">PHYSICS<br>LAB</div>
+  <div class="menu-subtitle">7th Grade · Science Quiz</div>
+  <div class="topic-grid" id="topicGrid"></div>
+  <button class="menu-play-btn" onclick="startQuiz()">▶ START SELECTED TOPIC</button>
+  <button class="menu-mix-btn" onclick="startMixedQuiz()">🔀 MIX ALL TOPICS (12 Qs)</button>
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+<div id="quizScreen" class="screen">
+  <div class="quiz-hud">
+    <div class="hud-topic" id="hudTopic">Physics</div>
+    <button class="quiz-back-btn" onclick="goMenu()">← Menu</button>
+    <div class="hud-score">⭐ <span id="hudScore">0</span></div>
+    <div class="hud-lives" id="hudLives">❤️❤️❤️</div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="question-card" id="questionCard">
+    <div class="q-meta"><span class="q-num" id="qNum">Q1</span><span id="qCategory">Topic</span></div>
+    <div class="q-formula" id="qFormula"></div>
+    <span class="q-image" id="qImage"></span>
+    <div class="q-text" id="qText">Question</div>
+    <div class="timer-wrap"><div class="timer-fill" id="timerFill"></div></div>
+  </div>
+  <div class="answers-grid" id="answersGrid"></div>
+  <div class="feedback-bar" id="feedbackBar">
+    <span class="fb-icon" id="fbIcon"></span>
+    <div><div id="fbText"></div><div class="fb-explanation" id="fbExplanation"></div></div>
+  </div>
+  <button class="next-btn" id="nextBtn" onclick="nextQuestion()">NEXT →</button>
+</div>
+
+<!-- ==================== RESULTS ==================== -->
+<div id="resultsScreen" class="screen">
+  <span class="results-trophy" id="resultsTrophy">🏆</span>
+  <div class="results-title" id="resultsTitle">NICE WORK!</div>
+  <div class="results-subtitle" id="resultsSubtitle">Here's how you did:</div>
+  <div class="score-display">
+    <div class="score-stat">
+      <span class="ss-val" id="resScore" style="color:var(--accent2)">0</span>
+      <span class="ss-label">Score</span>
+    </div>
+    <div class="score-stat">
+      <span class="ss-val" id="resCorrect" style="color:var(--green)">0</span>
+      <span class="ss-label">Correct</span>
+    </div>
+    <div class="score-stat">
+      <span class="ss-val" id="resAccuracy" style="color:var(--accent)">0%</span>
+      <span class="ss-label">Accuracy</span>
+    </div>
+  </div>
+  <div class="star-row" id="starRow">⭐⭐⭐</div>
+  <div class="grade-bar-wrap"><div class="grade-bar-fill" id="gradeBarFill"></div></div>
+  <div class="results-btns">
+    <button class="res-btn res-btn-retry" onclick="retryQuiz()">🔄 RETRY</button>
+    <button class="res-btn res-btn-menu" onclick="goMenu()">🏠 MENU</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+//  DATA
+// ============================================================
+const TOPICS = [
+  { id:'forces',   name:'Forces',   emoji:'💪', color:'#3de8ff', desc:'Newton\'s Laws & pushing/pulling' },
+  { id:'energy',   name:'Energy',   emoji:'⚡', color:'#ffe94d', desc:'Kinetic, Potential & Conservation' },
+  { id:'momentum', name:'Momentum', emoji:'🏈', color:'#ff6b9d', desc:'Mass, velocity & collisions' },
+  { id:'gravity',  name:'Gravity',  emoji:'🌍', color:'#2dffa0', desc:'Gravitational force & free fall' },
+  { id:'motion',   name:'Motion',   emoji:'🚀', color:'#c084fc', desc:'Speed, velocity & acceleration' },
+  { id:'waves',    name:'Waves',    emoji:'🌊', color:'#fb923c', desc:'Sound, light & wave properties' },
+];
+
+const QUESTIONS = [
+  // ── FORCES ──────────────────────────────────────────────────
+  {
+    topic:'forces', category:"Newton's 2nd Law", formula:'F = m × a', image:'💪',
+    q:'A 10 kg box is pushed with 30 N of force. What is its acceleration?',
+    opts:['0.33 m/s²','3 m/s²','300 m/s²','20 m/s²'], ans:1,
+    explain:'F = m × a  →  a = F ÷ m = 30 ÷ 10 = 3 m/s²'
+  },
+  {
+    topic:'forces', category:"Newton's 1st Law", image:'🛸',
+    q:"A spaceship in deep space with its engines off will…",
+    opts:['Slow down gradually','Stop right away','Keep moving at the same speed','Speed up by itself'], ans:2,
+    explain:"Newton's 1st Law: an object in motion stays in motion with no net force. No air or friction in space!"
+  },
+  {
+    topic:'forces', category:"Newton's 3rd Law", image:'🚀',
+    q:'When a rocket pushes hot gas downward, the rocket…',
+    opts:['Does nothing','Also moves downward','Moves upward','Spins in circles'], ans:2,
+    explain:"Newton's 3rd Law: every action has an equal & opposite reaction. Gas goes down → rocket goes up!"
+  },
+  {
+    topic:'forces', category:'Mass & Force', formula:'F = m × a', image:'⚖️',
+    q:'Which needs MORE force to accelerate at 5 m/s²: a 2 kg ball or a 10 kg ball?',
+    opts:['2 kg ball','10 kg ball','They need the same','Impossible to tell'], ans:1,
+    explain:'F = m × a. 2 kg needs 10 N. 10 kg needs 50 N. Heavier objects need more force!'
+  },
+  {
+    topic:'forces', category:'Friction', image:'🛷',
+    q:'Why does a sled slow down on flat snow after being pushed?',
+    opts:['Gravity pulls it back','Friction between sled and snow','Air pushes it back','Momentum "runs out"'], ans:1,
+    explain:'Friction is a force that opposes motion between two surfaces — it converts kinetic energy to heat!'
+  },
+  {
+    topic:'forces', category:'Weight vs Mass', image:'🌕',
+    q:"On the Moon gravity is ~1.6 m/s². A 60 kg astronaut's weight on the Moon is:",
+    opts:['600 N','96 N','60 N','588 N'], ans:1,
+    explain:'Weight = mass × g. On Moon: 60 × 1.6 = 96 N. On Earth it would be 60 × 10 = 600 N!'
+  },
+  {
+    topic:'forces', category:'Balanced Forces', image:'🪨',
+    q:'A book sits still on a table. The forces on it are:',
+    opts:['Only gravity acting down','Only the table pushing up','Balanced — gravity down, table pushing up equally','Unbalanced — the table wins'], ans:2,
+    explain:'Balanced forces = no acceleration. Gravity pulls the book down; the normal force from the table pushes up equally.'
+  },
+  {
+    topic:'forces', category:'Net Force', image:'🏋️',
+    q:'Two people push a box: one pushes with 40 N right, another with 25 N left. The net force is:',
+    opts:['65 N left','15 N right','65 N right','15 N left'], ans:1,
+    explain:'Net force = 40 N right − 25 N left = 15 N to the right. The box accelerates to the right!'
+  },
+
+  // ── ENERGY ──────────────────────────────────────────────────
+  {
+    topic:'energy', category:'Kinetic Energy', formula:'KE = ½mv²', image:'🎳',
+    q:'A 4 kg bowling ball moves at 3 m/s. What is its kinetic energy?',
+    opts:['6 J','12 J','18 J','36 J'], ans:2,
+    explain:'KE = ½ × m × v² = ½ × 4 × 9 = 18 J'
+  },
+  {
+    topic:'energy', category:'Potential Energy', formula:'PE = mgh', image:'🏔️',
+    q:'A 5 kg rock sits 10 m high (g = 10 m/s²). Its potential energy is:',
+    opts:['50 J','500 J','5 J','150 J'], ans:1,
+    explain:'PE = m × g × h = 5 × 10 × 10 = 500 J'
+  },
+  {
+    topic:'energy', category:'Energy on a Rollercoaster', image:'🎢',
+    q:'A rollercoaster has its maximum speed at:',
+    opts:['The top of a hill','The bottom of a valley','Halfway up','The very start'], ans:1,
+    explain:'Potential energy → kinetic energy going down. Most PE converts to KE at the bottom → fastest point!'
+  },
+  {
+    topic:'energy', category:'Types of Energy', image:'🔋',
+    q:'Which is an example of POTENTIAL (stored) energy?',
+    opts:['A moving car','Sound waves in air','A stretched rubber band','Heat from the sun'], ans:2,
+    explain:"A stretched rubber band stores elastic potential energy. Once released, it becomes kinetic energy!"
+  },
+  {
+    topic:'energy', category:'Energy Transfer', image:'💡',
+    q:'When you turn on a light bulb, electrical energy mainly becomes:',
+    opts:['Mechanical energy','Chemical energy','Light and heat','Sound energy'], ans:2,
+    explain:'Bulbs convert electrical → light (useful) and heat (wasted). That\'s why they get warm!'
+  },
+  {
+    topic:'energy', category:'Conservation of Energy', image:'⚡',
+    q:'The Law of Conservation of Energy states that energy can be:',
+    opts:['Created but not destroyed','Destroyed but not created','Neither created nor destroyed','Both freely created & destroyed'], ans:2,
+    explain:'Energy is never created or destroyed — only TRANSFORMED from one form to another!'
+  },
+  {
+    topic:'energy', category:'Kinetic vs Potential', image:'🏹',
+    q:'An arrow at the top of its flight path has:',
+    opts:['Maximum KE, zero PE','Maximum PE, zero KE','Equal KE and PE','Only gravitational PE'], ans:3,
+    explain:"At the peak, the arrow (briefly) stops vertically — KE from vertical motion is zero, PE is maximum. But it still has horizontal KE!"
+  },
+  {
+    topic:'energy', category:'Work', formula:'W = F × d', image:'🏗️',
+    q:'A crane lifts a 200 N box 5 m up. How much work is done?',
+    opts:['40 J','205 J','1000 J','195 J'], ans:2,
+    explain:'Work = Force × distance = 200 × 5 = 1000 J'
+  },
+
+  // ── MOMENTUM ─────────────────────────────────────────────────
+  {
+    topic:'momentum', category:'Momentum', formula:'p = m × v', image:'🏈',
+    q:'A 3 kg ball moves at 4 m/s. Its momentum is:',
+    opts:['0.75 kg·m/s','7 kg·m/s','12 kg·m/s','1.3 kg·m/s'], ans:2,
+    explain:'p = m × v = 3 × 4 = 12 kg·m/s'
+  },
+  {
+    topic:'momentum', category:'Comparing Momentum', image:'🚗',
+    q:'Which has MORE momentum: a 1,000 kg car at 10 m/s or a 500 kg car at 25 m/s?',
+    opts:['The 1,000 kg car (10,000)','The 500 kg car (12,500)','Equal momentum','Cannot compare'], ans:1,
+    explain:'Car 1: 1000×10 = 10,000. Car 2: 500×25 = 12,500. The lighter-but-faster car wins!'
+  },
+  {
+    topic:'momentum', category:'Conservation of Momentum', image:'🎱',
+    q:'Two billiard balls collide. After the collision their total momentum is:',
+    opts:['More than before','Less than before','The same as before','Always zero'], ans:2,
+    explain:"Conservation of Momentum: total momentum in a closed system is always conserved before and after collision."
+  },
+  {
+    topic:'momentum', category:'Impulse', image:'⚾',
+    q:'A batter swings and keeps the bat in contact with the ball longer. This:',
+    opts:['Reduces the force effect','Increases the impulse (greater change in momentum)','Makes no difference','Slows the ball down'], ans:1,
+    explain:'Impulse = Force × Time. More contact time = more impulse = greater change in momentum = ball flies farther!'
+  },
+  {
+    topic:'momentum', category:'Momentum & Speed', formula:'p = m × v', image:'🏃',
+    q:"If a runner doubles their speed, what happens to their momentum?",
+    opts:['Stays the same','It doubles','It quadruples','It halves'], ans:1,
+    explain:'p = m × v. Same mass, double v → p = m × 2v = 2(mv). Momentum doubles!'
+  },
+  {
+    topic:'momentum', category:'Collisions', image:'🚂',
+    q:'In a perfectly inelastic collision, two objects:',
+    opts:['Bounce off each other','Stick together after colliding','Both stop instantly','Speed up after hitting'], ans:1,
+    explain:"In a perfectly inelastic collision, the objects stick together. Momentum is still conserved!"
+  },
+
+  // ── GRAVITY ──────────────────────────────────────────────────
+  {
+    topic:'gravity', category:'History of Gravity', image:'🍎',
+    q:'Who first described the Law of Universal Gravitation?',
+    opts:['Albert Einstein','Isaac Newton','Galileo Galilei','Nikola Tesla'], ans:1,
+    explain:'Isaac Newton formulated the Law of Universal Gravitation in 1687. Einstein later refined it with General Relativity.'
+  },
+  {
+    topic:'gravity', category:'Free Fall', image:'🪂',
+    q:'On Earth, all objects in free fall (ignoring air resistance) accelerate at:',
+    opts:['5 m/s²','9.8 m/s²','15 m/s²','Depends on their mass'], ans:1,
+    explain:'Earth\'s gravitational acceleration ≈ 9.8 m/s² for ALL objects regardless of mass — as Galileo proved!'
+  },
+  {
+    topic:'gravity', category:'Gravity & Mass', image:'🌍',
+    q:"If Earth's mass doubled, your weight would:",
+    opts:['Stay the same','Halve','Double','Quadruple'], ans:2,
+    explain:'Gravity is proportional to mass. Double the Earth\'s mass → double the gravitational pull → double your weight!'
+  },
+  {
+    topic:'gravity', category:'Orbits', image:'🛰️',
+    q:"Why does the Moon orbit Earth instead of falling straight into it?",
+    opts:['The Moon has no gravity','It moves sideways so fast it keeps "missing" Earth','No gravity exists in space','The Sun pushes it sideways'], ans:1,
+    explain:"An orbit is a continuous free-fall! The Moon falls toward Earth but moves sideways so fast it curves around — missing Earth constantly!"
+  },
+  {
+    topic:'gravity', category:'Inverse Square Law', image:'🌌',
+    q:'What happens to gravitational force as two objects get further apart?',
+    opts:['It increases','It stays the same','It decreases','It reverses'], ans:2,
+    explain:'Gravity follows an inverse-square law — double the distance, force drops to ¼ as strong!'
+  },
+  {
+    topic:'gravity', category:'Weight vs Mass', image:'🏋️',
+    q:'An astronaut\'s MASS on the Moon compared to on Earth is:',
+    opts:['6× smaller','The same','6× larger','Cannot be measured'], ans:1,
+    explain:'Mass never changes — it\'s the amount of matter in an object. Weight changes because gravity differs, but mass stays the same!'
+  },
+
+  // ── MOTION ───────────────────────────────────────────────────
+  {
+    topic:'motion', category:'Average Speed', formula:'v = d ÷ t', image:'🏎️',
+    q:'A car travels 150 km in 3 hours. Its average speed is:',
+    opts:['450 km/h','50 km/h','0.02 km/h','153 km/h'], ans:1,
+    explain:'Speed = distance ÷ time = 150 ÷ 3 = 50 km/h'
+  },
+  {
+    topic:'motion', category:'Acceleration', formula:'a = Δv ÷ t', image:'🚂',
+    q:'A train speeds up from 0 to 60 m/s in 10 seconds. Its acceleration is:',
+    opts:['600 m/s²','6 m/s²','0.17 m/s²','60 m/s²'], ans:1,
+    explain:'a = Δv ÷ t = 60 ÷ 10 = 6 m/s²'
+  },
+  {
+    topic:'motion', category:'Speed vs Velocity', image:'🧭',
+    q:'What is the key difference between speed and velocity?',
+    opts:['They are identical','Velocity includes direction; speed does not','Speed includes direction; velocity does not','Velocity is always faster'], ans:1,
+    explain:'Speed is scalar (how fast). Velocity is a vector — it includes both SPEED and DIRECTION (e.g., 30 m/s North).'
+  },
+  {
+    topic:'motion', category:'Relative Motion', image:'🚞',
+    q:"You're on a 80 km/h train. You walk toward the front at 5 km/h. Your speed relative to the ground is:",
+    opts:['75 km/h','5 km/h','85 km/h','80 km/h'], ans:2,
+    explain:'Add velocities in the same direction: 80 + 5 = 85 km/h relative to the ground.'
+  },
+  {
+    topic:'motion', category:'Distance-Time Graphs', image:'📈',
+    q:'On a distance-time graph, a horizontal flat line means the object is:',
+    opts:['Moving at constant speed','Accelerating','Stationary (not moving)','Slowing down'], ans:2,
+    explain:'Horizontal line = distance not changing over time = object is NOT moving!'
+  },
+  {
+    topic:'motion', category:'Deceleration', image:'🛑',
+    q:'A car brakes and slows from 30 m/s to 0 in 5 seconds. Its acceleration is:',
+    opts:['+6 m/s²','−6 m/s²','0 m/s²','30 m/s²'], ans:1,
+    explain:'a = Δv ÷ t = (0−30) ÷ 5 = −6 m/s². Negative = deceleration (slowing down).'
+  },
+
+  // ── WAVES ────────────────────────────────────────────────────
+  {
+    topic:'waves', category:'Wave Properties', image:'〰️',
+    q:'The distance between two consecutive wave peaks is called the:',
+    opts:['Amplitude','Frequency','Wavelength','Period'], ans:2,
+    explain:'Wavelength (λ) = crest to crest distance. Amplitude = height of the wave from rest.'
+  },
+  {
+    topic:'waves', category:'Sound Waves', image:'🔊',
+    q:'Sound travels fastest through:',
+    opts:['Air','Water','Steel (solid)','A vacuum'], ans:2,
+    explain:'Particles in solids are closely packed — vibrations pass much faster. Speed in steel ≈ 5,000 m/s vs air ≈ 343 m/s!'
+  },
+  {
+    topic:'waves', category:'Light & Color', image:'🌈',
+    q:'Which color of visible light has the HIGHEST frequency?',
+    opts:['Red','Orange','Green','Violet'], ans:3,
+    explain:'ROY G BIV — Violet has the highest frequency (and shortest wavelength). Red has the lowest.'
+  },
+  {
+    topic:'waves', category:'Wave Speed', formula:'v = f × λ', image:'📡',
+    q:'A wave has frequency 5 Hz and wavelength 2 m. Its speed is:',
+    opts:['2.5 m/s','3 m/s','7 m/s','10 m/s'], ans:3,
+    explain:'Wave speed = frequency × wavelength = 5 × 2 = 10 m/s'
+  },
+  {
+    topic:'waves', category:'Electromagnetic Waves', image:'☀️',
+    q:'Which type of wave can travel through a vacuum (empty space)?',
+    opts:['Sound waves','Water waves','Light (electromagnetic) waves','Seismic waves'], ans:2,
+    explain:"EM waves don't need a medium! That's how sunlight crosses 150 million km of space to reach Earth."
+  },
+  {
+    topic:'waves', category:'Refraction', image:'🪞',
+    q:'When light bends entering water from air, this is called:',
+    opts:['Reflection','Refraction','Diffraction','Absorption'], ans:1,
+    explain:"Refraction = bending of waves changing medium. That's why a straw looks bent in a glass of water!"
+  },
+  {
+    topic:'waves', category:'Frequency & Pitch', image:'🎵',
+    q:'A higher frequency sound wave produces a:',
+    opts:['Lower pitch','Higher pitch','Louder sound','Softer sound'], ans:1,
+    explain:'Pitch is determined by frequency. High frequency = high pitch (e.g., a piccolo). Low frequency = low pitch (e.g., a tuba).'
+  },
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+let selectedTopic  = null;
+let quizQuestions  = [];
+let currentQIdx    = 0;
+let score          = 0;
+let correctCount   = 0;
+let lives          = 3;
+let timerInterval  = null;
+let timerSeconds   = 15;
+let answered       = false;
+let lastRetryTopic = null;
+
+// ============================================================
+//  INIT
+// ============================================================
+window.onload = () => {
+  buildFormulaBg();
+  buildTopicGrid();
+};
+
+function buildFormulaBg() {
+  const c = document.getElementById('formulaBg');
+  const fx = ['F=ma','p=mv','KE=½mv²','PE=mgh','v=d/t','a=Δv/t','τ=r×F','W=Fd','v=fλ','E=mc²','p=mv','F=Gm₁m₂/r²'];
+  for (let i = 0; i < 14; i++) {
+    const el = document.createElement('div');
+    el.className = 'formula-particle';
+    el.textContent = fx[i % fx.length];
+    el.style.left = (Math.random() * 100) + 'vw';
+    el.style.animationDuration = (14 + Math.random() * 18) + 's';
+    el.style.animationDelay   = (-Math.random() * 20) + 's';
+    c.appendChild(el);
+  }
+}
+
+function buildTopicGrid() {
+  const grid = document.getElementById('topicGrid');
+  grid.innerHTML = '';
+  TOPICS.forEach(t => {
+    const count = QUESTIONS.filter(q => q.topic === t.id).length;
+    const div = document.createElement('div');
+    div.className = 'topic-card' + (selectedTopic === t.id ? ' selected' : '');
+    div.innerHTML = `
+      <span class="tc-emoji">${t.emoji}</span>
+      <div class="tc-name" style="color:${t.color}">${t.name}</div>
+      <div class="tc-count">${count} questions</div>
+    `;
+    div.addEventListener('click', () => {
+      selectedTopic = t.id;
+      document.querySelectorAll('.topic-card').forEach(c => { c.classList.remove('selected'); c.style.borderColor = ''; c.style.boxShadow = ''; });
+      div.classList.add('selected');
+      div.style.borderColor = t.color;
+      div.style.boxShadow = `0 0 16px ${t.color}55`;
+    });
+    grid.appendChild(div);
+  });
+}
+
+// ============================================================
+//  START
+// ============================================================
+function startQuiz() {
+  const topic = selectedTopic || TOPICS[0].id;
+  selectedTopic = topic;
+  lastRetryTopic = topic;
+  const pool = shuffle(QUESTIONS.filter(q => q.topic === topic)).slice(0, 8);
+  const t = TOPICS.find(t => t.id === topic);
+  launchQuiz(pool, t ? `${t.emoji} ${t.name}` : 'Physics');
+}
+
+function startMixedQuiz() {
+  selectedTopic  = 'mixed';
+  lastRetryTopic = null;
+  const pool = shuffle([...QUESTIONS]).slice(0, 12);
+  launchQuiz(pool, '🔀 Mixed Topics');
+}
+
+function launchQuiz(questions, label) {
+  quizQuestions = questions;
+  currentQIdx   = 0;
+  score         = 0;
+  correctCount  = 0;
+  lives         = 3;
+  answered      = false;
+  document.getElementById('hudTopic').textContent = label;
+  showScreen('quizScreen');
+  renderQuestion();
+}
+
+// ============================================================
+//  RENDER
+// ============================================================
+function renderQuestion() {
+  answered = false;
+  clearInterval(timerInterval);
+
+  const q     = quizQuestions[currentQIdx];
+  const total = quizQuestions.length;
+
+  // Animate card
+  const card = document.getElementById('questionCard');
+  card.style.animation = 'none';
+  void card.offsetWidth;
+  card.style.animation = '';
+
+  document.getElementById('qNum').textContent      = `Q${currentQIdx + 1}`;
+  document.getElementById('qCategory').textContent = q.category;
+  document.getElementById('qFormula').textContent  = q.formula || '';
+  document.getElementById('qImage').textContent    = q.image || '';
+  document.getElementById('qText').textContent     = q.q;
+  document.getElementById('progressFill').style.width = (currentQIdx / total * 100) + '%';
+  document.getElementById('hudScore').textContent  = score;
+  updateLives();
+
+  // Answers
+  const letters = ['A','B','C','D'];
+  const grid    = document.getElementById('answersGrid');
+  grid.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className      = 'answer-btn';
+    btn.dataset.letter = letters[i];
+    btn.textContent    = opt;
+    btn.addEventListener('click', () => selectAnswer(i));
+    grid.appendChild(btn);
+  });
+
+  // Reset feedback + next
+  document.getElementById('feedbackBar').className = 'feedback-bar';
+  document.getElementById('nextBtn').classList.remove('visible');
+
+  // Timer
+  timerSeconds = 15;
+  const fill   = document.getElementById('timerFill');
+  fill.style.transition = 'none';
+  fill.style.width      = '100%';
+  fill.style.background = 'linear-gradient(90deg,var(--green),var(--accent))';
+  void fill.offsetWidth;
+  setTimeout(() => {
+    fill.style.transition = 'width 15s linear, background 8s linear';
+    fill.style.width      = '0%';
+    fill.style.background = 'linear-gradient(90deg,var(--red),#ff8c00)';
+  }, 50);
+
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    if (timerSeconds <= 0) { clearInterval(timerInterval); timeOut(); }
+  }, 1000);
+}
+
+// ============================================================
+//  ANSWER
+// ============================================================
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+
+  const q    = quizQuestions[currentQIdx];
+  const btns = document.querySelectorAll('.answer-btn');
+  btns.forEach(b => b.disabled = true);
+
+  const ok = idx === q.ans;
+  btns[idx].classList.add(ok ? 'correct' : 'wrong');
+  if (!ok) btns[q.ans].classList.add('reveal-correct');
+
+  if (ok) {
+    const pts = Math.max(100, timerSeconds * 20);
+    score       += pts;
+    correctCount++;
+    showScorePop('+' + pts, btns[idx]);
+    showFeedback(true, '✅ Correct!', q.explain);
+  } else {
+    lives--;
+    updateLives();
+    showFeedback(false, '❌ Not quite!', q.explain);
+    if (lives <= 0) { setTimeout(finishQuiz, 1500); return; }
+  }
+
+  document.getElementById('hudScore').textContent = score;
+  document.getElementById('nextBtn').classList.add('visible');
+}
+
+function timeOut() {
+  if (answered) return;
+  answered = true;
+  const q    = quizQuestions[currentQIdx];
+  const btns = document.querySelectorAll('.answer-btn');
+  btns.forEach(b => b.disabled = true);
+  btns[q.ans].classList.add('reveal-correct');
+  lives--;
+  updateLives();
+  showFeedback(false, '⏰ Time\'s up!', q.explain);
+  if (lives <= 0) { setTimeout(finishQuiz, 1500); return; }
+  document.getElementById('nextBtn').classList.add('visible');
+}
+
+// ============================================================
+//  FEEDBACK & UTILS
+// ============================================================
+function showFeedback(ok, title, explain) {
+  const bar = document.getElementById('feedbackBar');
+  bar.className = 'feedback-bar ' + (ok ? 'correct-fb' : 'wrong-fb');
+  document.getElementById('fbIcon').textContent        = ok ? '⚡' : '💡';
+  document.getElementById('fbText').textContent        = title;
+  document.getElementById('fbExplanation').textContent = explain;
+}
+
+function updateLives() {
+  const h = ['❤️','❤️','❤️'];
+  for (let i = 0; i < 3 - lives; i++) h[2 - i] = '🖤';
+  document.getElementById('hudLives').textContent = h.join('');
+}
+
+function showScorePop(text, el) {
+  const rect = el.getBoundingClientRect();
+  const pop  = document.createElement('div');
+  pop.className   = 'score-pop';
+  pop.textContent = text;
+  pop.style.color = '#2dffa0';
+  pop.style.left  = (rect.left + rect.width / 2 - 30) + 'px';
+  pop.style.top   = (rect.top - 10) + 'px';
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 1200);
+}
+
+// ============================================================
+//  NEXT / FINISH
+// ============================================================
+function nextQuestion() {
+  currentQIdx++;
+  if (currentQIdx >= quizQuestions.length) finishQuiz();
+  else renderQuestion();
+}
+
+function finishQuiz() {
+  clearInterval(timerInterval);
+  const total    = quizQuestions.length;
+  const accuracy = Math.round(correctCount / total * 100);
+
+  let trophy, title, subtitle;
+  if (accuracy === 100) { trophy='🏆'; title='PERFECT SCORE!'; subtitle='You\'re a Physics genius!'; }
+  else if (accuracy >= 80) { trophy='🥇'; title='EXCELLENT!'; subtitle='Outstanding physics knowledge!'; }
+  else if (accuracy >= 60) { trophy='🥈'; title='GOOD JOB!'; subtitle='Solid understanding — keep studying!'; }
+  else if (accuracy >= 40) { trophy='🥉'; title='KEEP TRYING!'; subtitle='Review the topics and try again!'; }
+  else { trophy='📚'; title='STUDY TIME!'; subtitle='Physics takes practice — you\'ve got this!'; }
+
+  const stars = accuracy >= 90 ? '⭐⭐⭐' : accuracy >= 60 ? '⭐⭐' : '⭐';
+
+  document.getElementById('resultsTrophy').textContent   = trophy;
+  document.getElementById('resultsTitle').textContent    = title;
+  document.getElementById('resultsSubtitle').textContent = subtitle;
+  document.getElementById('resScore').textContent        = score;
+  document.getElementById('resCorrect').textContent      = correctCount + ' / ' + total;
+  document.getElementById('resAccuracy').textContent     = accuracy + '%';
+  document.getElementById('starRow').textContent         = stars;
+
+  showScreen('resultsScreen');
+  setTimeout(() => { document.getElementById('gradeBarFill').style.width = accuracy + '%'; }, 120);
+
+  if (accuracy >= 60) spawnConfetti(accuracy >= 90 ? 90 : 45);
+}
+
+function retryQuiz() {
+  if (lastRetryTopic) { selectedTopic = lastRetryTopic; startQuiz(); }
+  else startMixedQuiz();
+}
+
+function goMenu() {
+  clearInterval(timerInterval);
+  showScreen('menuScreen');
+  buildTopicGrid();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ============================================================
+//  CONFETTI
+// ============================================================
+function spawnConfetti(n) {
+  const wrap   = document.getElementById('confettiWrap');
+  wrap.innerHTML = '';
+  const colors = ['#3de8ff','#ffe94d','#ff6b9d','#2dffa0','#c084fc','#fb923c','#fff'];
+  for (let i = 0; i < n; i++) {
+    const el = document.createElement('div');
+    el.className   = 'conf';
+    el.style.left  = Math.random() * 100 + 'vw';
+    el.style.background    = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDuration = (2 + Math.random() * 2.5) + 's';
+    el.style.animationDelay    = (Math.random() * 1.8) + 's';
+    el.style.width  = (5 + Math.random() * 8) + 'px';
+    el.style.height = (5 + Math.random() * 8) + 'px';
+    el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    wrap.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+</script>
+</body>
+</html>
