@@ -1,37 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Steamfest Project</title>
+    <title>Steamfest</title>
     <style>
         body {
             margin: 0;
-            height: 100vh;
-            background-color: #1e4fd1; /* Blue background */
+            min-height: 100vh;
+            background-color: #1e4fd1;
             color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
             font-family: Arial, sans-serif;
             text-align: center;
+            padding-top: 80px;
         }
 
         h1 {
             font-size: 48px;
-            margin-bottom: 10px;
         }
 
-        h2 {
-            font-weight: normal;
-            margin-bottom: 5px;
-        }
-
-        p {
-            margin-bottom: 30px;
-        }
-
-        pre {
+        button {
+            padding: 12px 20px;
+            margin: 10px;
             font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #files {
+            margin-top: 30px;
         }
     </style>
 </head>
@@ -41,16 +37,33 @@
     <h2>A Multidisciplinary Project</h2>
     <p>By Adwaith, Krishen, and Arik</p>
 
-    <pre>
-        ______________________
-       |  __________________  |
-       | |  &lt;code&gt; 0101  | | |
-       | |  { }  [ ]  &lt;/&gt; | | |
-       | |__________________| | |
-       |________________________|
-              |   |       |   |
-              |___|       |___|
-    </pre>
+    <div id="files">
+        <p>Loading projects...</p>
+    </div>
+
+    <script>
+        fetch("https://api.github.com/repos/MSG-PMG/Steam-Fest/contents/")
+            .then(response => response.json())
+            .then(data => {
+                const filesDiv = document.getElementById("files");
+                filesDiv.innerHTML = "<h3>Available Projects:</h3>";
+
+                data.forEach(file => {
+                    if (file.name.endsWith(".html") && file.name !== "index.html") {
+                        const btn = document.createElement("button");
+                        btn.textContent = file.name.replace(".html", "");
+                        btn.onclick = () => {
+                            window.location.href = file.name;
+                        };
+                        filesDiv.appendChild(btn);
+                    }
+                });
+            })
+            .catch(error => {
+                document.getElementById("files").innerHTML =
+                    "Could not load repository contents.";
+            });
+    </script>
 
 </body>
 </html>
