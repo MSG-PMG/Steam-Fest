@@ -1,69 +1,19 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Steamfest</title>
-    <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background-color: #1e4fd1;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding-top: 80px;
-        }
+<script>
+    const projects = [
+        "physics-game.html",
+        "physics-quiz.html"
+    ];
 
-        h1 {
-            font-size: 48px;
-        }
+    const filesDiv = document.getElementById("files");
+    filesDiv.innerHTML = "<h3>Available Projects:</h3>";
 
-        button {
-            padding: 12px 20px;
-            margin: 10px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-        }
+    projects.forEach(file => {
+        const btn = document.createElement("button");
+        btn.textContent = file.replace(".html", "");
+        btn.onclick = () => {
+            window.location.href = file;
+        };
+        filesDiv.appendChild(btn);
+    });
+</script>
 
-        #files {
-            margin-top: 30px;
-        }
-    </style>
-</head>
-<body>
-
-    <h1>Steamfest</h1>
-    <h2>A Multidisciplinary Project</h2>
-    <p>By Adwaith, Krishen, and Arik</p>
-
-    <div id="files">
-        <p>Loading projects...</p>
-    </div>
-
-    <script>
-        fetch("https://api.github.com/repos/MSG-PMG/Steam-Fest/contents/")
-            .then(response => response.json())
-            .then(data => {
-                const filesDiv = document.getElementById("files");
-                filesDiv.innerHTML = "<h3>Available Projects:</h3>";
-
-                data.forEach(file => {
-                    if (file.name.endsWith(".html") && file.name !== "index.html") {
-                        const btn = document.createElement("button");
-                        btn.textContent = file.name.replace(".html", "");
-                        btn.onclick = () => {
-                            window.location.href = file.name;
-                        };
-                        filesDiv.appendChild(btn);
-                    }
-                });
-            })
-            .catch(error => {
-                document.getElementById("files").innerHTML =
-                    "Could not load repository contents.";
-            });
-    </script>
-
-</body>
-</html>
