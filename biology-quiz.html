@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧬 Biology Lab Quiz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap');
+
+:root {
+  --bg:         #080f08;
+  --surface:    #0e1a0e;
+  --panel:      #111e11;
+  --border:     rgba(99,255,130,0.18);
+  --accent:     #3dff7a;
+  --accent2:    #ffe94d;
+  --accent3:    #ff6b9d;
+  --green:      #2dffa0;
+  --red:        #ff4d6d;
+  --text:       #e8f5e8;
+  --muted:      #6b996b;
+  --glow:       0 0 18px rgba(61,255,122,0.45);
+  --glow-gold:  0 0 18px rgba(255,233,77,0.5);
+  --glow-red:   0 0 18px rgba(255,77,109,0.45);
+  --glow-green: 0 0 18px rgba(45,255,160,0.45);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'Exo 2', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 20px;
+  padding-bottom: 40px;
+}
+
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(61,255,122,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(61,255,122,0.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+  animation: gridDrift 20s linear infinite;
+}
+@keyframes gridDrift { from{background-position:0 0} to{background-position:44px 44px} }
+
+.word-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.word-particle {
+  position: absolute; font-family: 'Orbitron', monospace; font-size: 0.75rem;
+  color: rgba(61,255,122,0.08); animation: floatUp linear infinite; white-space: nowrap;
+}
+@keyframes floatUp {
+  from { transform: translateY(110vh) rotate(-8deg); opacity: 0; }
+  10%  { opacity: 1; } 90% { opacity: 1; }
+  to   { transform: translateY(-10vh) rotate(8deg); opacity: 0; }
+}
+
+.container { position: relative; z-index: 1; width: 100%; max-width: 740px; padding: 16px; }
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ── MENU ── */
+#menuScreen { text-align: center; }
+
+.lab-icon {
+  font-size: 4rem; display: block;
+  filter: drop-shadow(0 0 20px rgba(61,255,122,0.7));
+  animation: iconBob 2.5s ease-in-out infinite; margin-bottom: 4px;
+}
+@keyframes iconBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+.menu-title {
+  font-family: 'Orbitron', monospace; font-size: 2.8rem; font-weight: 900;
+  color: var(--accent); text-shadow: var(--glow);
+  letter-spacing: 4px; line-height: 1; margin-bottom: 4px;
+}
+.menu-subtitle { font-size: 0.9rem; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 26px; }
+
+.topic-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 11px; margin-bottom: 22px; }
+.topic-card {
+  background: var(--panel); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 15px 10px; cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  position: relative; overflow: hidden;
+}
+.topic-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,transparent 60%,rgba(61,255,122,0.05)); border-radius:inherit; }
+.topic-card:hover { transform: translateY(-4px) scale(1.03); }
+.topic-card:active { transform: scale(0.97); }
+.topic-card.selected { border-color: var(--accent) !important; box-shadow: var(--glow) !important; }
+.tc-emoji { font-size: 1.9rem; display:block; margin-bottom:5px; }
+.tc-name { font-family:'Orbitron',monospace; font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px; }
+.tc-count { font-size: 0.68rem; color: var(--muted); }
+
+.menu-play-btn {
+  font-family: 'Orbitron', monospace; font-size: 1rem; font-weight: 900;
+  letter-spacing: 3px; background: linear-gradient(135deg, var(--accent), #007a30);
+  color: #000; border: none; border-radius: 14px;
+  padding: 16px 50px; cursor: pointer; box-shadow: var(--glow);
+  transition: transform 0.12s, box-shadow 0.12s;
+  text-transform: uppercase; margin-bottom: 11px; display: block; width: 100%;
+}
+.menu-play-btn:hover { transform: translateY(-3px); box-shadow: 0 0 36px rgba(61,255,122,0.7); }
+.menu-play-btn:active { transform: scale(0.97); }
+
+.menu-mix-btn {
+  font-family: 'Orbitron', monospace; font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 2px; background: transparent;
+  border: 1.5px solid var(--accent2); color: var(--accent2); border-radius: 12px;
+  padding: 11px 36px; cursor: pointer; box-shadow: var(--glow-gold);
+  transition: transform 0.12s, background 0.15s;
+  text-transform: uppercase; display: block; width: 100%;
+}
+.menu-mix-btn:hover { background: rgba(255,233,77,0.1); transform: translateY(-2px); }
+
+/* ── QUIZ ── */
+#quizScreen { text-align: center; }
+
+.quiz-hud { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.hud-topic { font-family:'Orbitron',monospace; font-size:0.68rem; font-weight:700; color:var(--accent); letter-spacing:2px; text-transform:uppercase; background:rgba(61,255,122,0.08); border:1px solid var(--border); border-radius:7px; padding:4px 10px; }
+.hud-score { font-family:'Orbitron',monospace; font-size:0.95rem; font-weight:900; color:var(--accent2); text-shadow:var(--glow-gold); margin-left:auto; }
+.hud-lives { font-size:1rem; letter-spacing:1px; }
+
+.progress-wrap { background:rgba(255,255,255,0.06); border-radius:99px; height:5px; margin-bottom:15px; overflow:hidden; border:1px solid var(--border); }
+.progress-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--accent),var(--accent2)); box-shadow:var(--glow); transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+
+.question-card {
+  background: var(--panel); border: 1.5px solid var(--border);
+  border-radius: 18px; padding: 24px 24px 18px;
+  margin-bottom: 14px; position: relative; overflow: hidden;
+  animation: cardIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes cardIn { from{transform:translateY(18px) scale(0.97);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
+.question-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3)); }
+
+.q-meta { font-size:0.65rem; font-weight:700; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.q-num { font-family:'Orbitron',monospace; font-size:0.62rem; color:var(--accent); background:rgba(61,255,122,0.1); border-radius:5px; padding:1px 7px; }
+.q-formula { font-family:'Orbitron',monospace; font-size:1.3rem; font-weight:700; color:var(--accent2); text-shadow:var(--glow-gold); margin:8px 0 12px; letter-spacing:2px; }
+.q-image { font-size:3rem; margin:4px 0; filter:drop-shadow(0 0 10px rgba(61,255,122,0.3)); display:block; }
+.q-text { font-size:1rem; font-weight:600; color:var(--text); line-height:1.5; }
+.timer-wrap { background:rgba(255,255,255,0.06); border-radius:99px; height:4px; margin-top:14px; overflow:hidden; }
+.timer-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--green),var(--accent)); transition:width linear,background 0.5s; }
+
+.answers-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:13px; }
+.answer-btn {
+  background: var(--surface); border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 13px; padding: 14px 12px; cursor: pointer;
+  font-family:'Exo 2',sans-serif; font-size:0.88rem; font-weight:600;
+  color:var(--text); text-align:left;
+  transition:transform 0.12s,border-color 0.15s,background 0.15s,box-shadow 0.15s;
+  position:relative; overflow:hidden; line-height:1.35;
+}
+.answer-btn::before { content:attr(data-letter); position:absolute; top:8px; right:10px; font-family:'Orbitron',monospace; font-size:0.6rem; font-weight:900; color:var(--muted); transition:color 0.15s; }
+.answer-btn:hover:not(:disabled) { transform:translateY(-2px) scale(1.02); border-color:var(--accent); background:rgba(61,255,122,0.07); box-shadow:var(--glow); }
+.answer-btn:hover:not(:disabled)::before { color:var(--accent); }
+.answer-btn:disabled { cursor:default; }
+.answer-btn.correct { border-color:var(--green); background:rgba(45,255,160,0.12); box-shadow:var(--glow-green); animation:correctPop 0.4s cubic-bezier(0.17,0.89,0.32,1.49) both; }
+.answer-btn.wrong   { border-color:var(--red); background:rgba(255,77,109,0.1); box-shadow:var(--glow-red); animation:wrongShake 0.4s both; }
+.answer-btn.reveal-correct { border-color:var(--green); background:rgba(45,255,160,0.06); }
+@keyframes correctPop { 0%{transform:scale(1)} 40%{transform:scale(1.06)} 100%{transform:scale(1)} }
+@keyframes wrongShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+
+.feedback-bar { border-radius:11px; padding:9px 14px; font-size:0.84rem; font-weight:600; margin-bottom:10px; display:none; align-items:center; gap:10px; animation:feedIn 0.3s ease both; line-height:1.4; text-align:left; }
+@keyframes feedIn { from{transform:translateY(6px);opacity:0} to{transform:translateY(0);opacity:1} }
+.feedback-bar.correct-fb { display:flex; background:rgba(45,255,160,0.1); border:1px solid var(--green); color:var(--green); }
+.feedback-bar.wrong-fb   { display:flex; background:rgba(255,77,109,0.1); border:1px solid var(--red); color:#ff8fab; }
+.fb-icon { font-size:1.3rem; flex-shrink:0; }
+.fb-explanation { font-size:0.76rem; color:var(--muted); margin-top:2px; }
+
+.next-btn { font-family:'Orbitron',monospace; font-size:0.82rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; background:linear-gradient(135deg,var(--accent),#007a30); color:#000; border:none; border-radius:11px; padding:12px 34px; cursor:pointer; box-shadow:var(--glow); transition:transform 0.12s; display:none; }
+.next-btn.visible { display:inline-block; animation:feedIn 0.3s both; }
+.next-btn:hover { transform:translateY(-2px); }
+
+.quiz-back-btn { font-size:0.7rem; color:var(--muted); background:none; border:none; cursor:pointer; font-family:'Exo 2',sans-serif; padding:4px 10px; transition:color 0.15s; }
+.quiz-back-btn:hover { color:var(--accent); }
+
+/* ── RESULTS ── */
+#resultsScreen { text-align:center; }
+.results-trophy { font-size:5rem; display:block; margin-bottom:10px; filter:drop-shadow(0 0 24px rgba(255,233,77,0.6)); animation:trophySpin 1.2s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes trophySpin { from{transform:scale(0) rotate(-180deg);opacity:0} to{transform:scale(1) rotate(0deg);opacity:1} }
+.results-title { font-family:'Orbitron',monospace; font-size:1.9rem; font-weight:900; margin-bottom:4px; }
+.results-subtitle { color:var(--muted); font-size:0.87rem; margin-bottom:22px; }
+.score-display { background:var(--panel); border:1.5px solid var(--border); border-radius:18px; padding:20px; margin-bottom:16px; display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.score-stat .ss-val { font-family:'Orbitron',monospace; font-size:1.9rem; font-weight:900; display:block; }
+.score-stat .ss-label { font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; }
+.star-row { margin-bottom:16px; font-size:2rem; letter-spacing:6px; }
+.grade-bar-wrap { background:rgba(255,255,255,0.05); border-radius:99px; height:9px; margin-bottom:20px; overflow:hidden; border:1px solid var(--border); }
+.grade-bar-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--accent),var(--accent2)); box-shadow:var(--glow); transition:width 1.2s cubic-bezier(0.34,1.56,0.64,1); width:0%; }
+.results-btns { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.res-btn { font-family:'Orbitron',monospace; font-size:0.75rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; border-radius:12px; padding:13px; cursor:pointer; border:none; transition:transform 0.12s; }
+.res-btn:hover { transform:translateY(-2px); }
+.res-btn-retry { background:linear-gradient(135deg,var(--accent),#007a30); color:#000; box-shadow:var(--glow); }
+.res-btn-menu  { background:var(--surface); border:1.5px solid var(--border); color:var(--text); }
+
+.confetti-wrap { position:fixed; inset:0; pointer-events:none; z-index:10; overflow:hidden; }
+.conf { position:absolute; width:9px; height:9px; border-radius:2px; animation:confettiFall linear forwards; }
+@keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+.score-pop { position:fixed; font-family:'Orbitron',monospace; font-size:1.2rem; font-weight:900; pointer-events:none; z-index:20; animation:scorePop 1.1s ease forwards; }
+@keyframes scorePop { 0%{transform:translateY(0);opacity:1} 100%{transform:translateY(-75px);opacity:0} }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="word-bg" id="wordBg"></div>
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<div class="container">
+
+<!-- MENU -->
+<div id="menuScreen" class="screen active">
+  <span class="lab-icon">🧬</span>
+  <div class="menu-title">BIOLOGY<br>LAB</div>
+  <div class="menu-subtitle">7th Grade · Science Quiz</div>
+  <div class="topic-grid" id="topicGrid"></div>
+  <button class="menu-play-btn" onclick="startQuiz()">▶ START SELECTED TOPIC</button>
+  <button class="menu-mix-btn" onclick="startMixedQuiz()">🔀 MIX ALL TOPICS (12 Qs)</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quizScreen" class="screen">
+  <div class="quiz-hud">
+    <div class="hud-topic" id="hudTopic">Biology</div>
+    <button class="quiz-back-btn" onclick="goMenu()">← Menu</button>
+    <div class="hud-score">⭐ <span id="hudScore">0</span></div>
+    <div class="hud-lives" id="hudLives">❤️❤️❤️</div>
+  </div>
+  <div class="progress-wrap"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="question-card" id="questionCard">
+    <div class="q-meta"><span class="q-num" id="qNum">Q1</span><span id="qCategory">Topic</span></div>
+    <div class="q-formula" id="qFormula"></div>
+    <span class="q-image" id="qImage"></span>
+    <div class="q-text" id="qText">Question</div>
+    <div class="timer-wrap"><div class="timer-fill" id="timerFill"></div></div>
+  </div>
+  <div class="answers-grid" id="answersGrid"></div>
+  <div class="feedback-bar" id="feedbackBar">
+    <span class="fb-icon" id="fbIcon"></span>
+    <div><div id="fbText"></div><div class="fb-explanation" id="fbExplanation"></div></div>
+  </div>
+  <button class="next-btn" id="nextBtn" onclick="nextQuestion()">NEXT →</button>
+</div>
+
+<!-- RESULTS -->
+<div id="resultsScreen" class="screen">
+  <span class="results-trophy" id="resultsTrophy">🏆</span>
+  <div class="results-title" id="resultsTitle">Nice Work!</div>
+  <div class="results-subtitle" id="resultsSubtitle">Here's how you did:</div>
+  <div class="score-display">
+    <div class="score-stat"><span class="ss-val" id="resScore" style="color:var(--accent2)">0</span><span class="ss-label">Score</span></div>
+    <div class="score-stat"><span class="ss-val" id="resCorrect" style="color:var(--green)">0</span><span class="ss-label">Correct</span></div>
+    <div class="score-stat"><span class="ss-val" id="resAccuracy" style="color:var(--accent)">0%</span><span class="ss-label">Accuracy</span></div>
+  </div>
+  <div class="star-row" id="starRow">⭐⭐⭐</div>
+  <div class="grade-bar-wrap"><div class="grade-bar-fill" id="gradeBarFill"></div></div>
+  <div class="results-btns">
+    <button class="res-btn res-btn-retry" onclick="retryQuiz()">🔄 RETRY</button>
+    <button class="res-btn res-btn-menu"  onclick="goMenu()">🏠 MENU</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+//  TOPICS & QUESTIONS
+// ============================================================
+const TOPICS = [
+  { id:'cells',      name:'Cells',        emoji:'🔬', color:'#3dff7a',  desc:'Cell types, organelles & functions'    },
+  { id:'organisms',  name:'Living Things', emoji:'🌿', color:'#69f0ae',  desc:'Characteristics of life & classification' },
+  { id:'genetics',   name:'Genetics',      emoji:'🧬', color:'#ffe94d',  desc:'DNA, heredity & traits'               },
+  { id:'ecosystems', name:'Ecosystems',    emoji:'🌍', color:'#29b6f6',  desc:'Food webs, biomes & interdependence'  },
+  { id:'body',       name:'Human Body',    emoji:'🫀', color:'#ff6b9d',  desc:'Body systems & organs'                },
+  { id:'evolution',  name:'Evolution',     emoji:'🦕', color:'#c084fc',  desc:'Natural selection & adaptation'       },
+];
+
+const QUESTIONS = [
+  // ── CELLS ────────────────────────────────────────────────
+  { topic:'cells', category:'Cell Organelles', image:'🔵',
+    q:'What is the "control center" of the cell that contains DNA?',
+    opts:['Mitochondria','Nucleus','Ribosome','Vacuole'], ans:1,
+    explain:'The nucleus controls all cell activities and holds the cell\'s genetic material (DNA).' },
+  { topic:'cells', category:'Cell Organelles', image:'⚡',
+    q:'Which organelle is called the "powerhouse of the cell"?',
+    opts:['Nucleus','Golgi apparatus','Mitochondria','Chloroplast'], ans:2,
+    explain:'Mitochondria produce ATP (energy) through cellular respiration — they\'re the cell\'s power plants!' },
+  { topic:'cells', category:'Plant vs Animal', image:'🌿',
+    q:'Which structure is found in plant cells but NOT animal cells?',
+    opts:['Nucleus','Mitochondria','Cell wall','Ribosome'], ans:2,
+    explain:'Plant cells have a rigid cell wall made of cellulose. Animal cells only have a flexible cell membrane.' },
+  { topic:'cells', category:'Plant vs Animal', image:'🌞',
+    q:'Which organelle does photosynthesis in plant cells?',
+    opts:['Mitochondria','Ribosome','Nucleus','Chloroplast'], ans:3,
+    explain:'Chloroplasts contain chlorophyll and convert sunlight + CO₂ + water into glucose and oxygen.' },
+  { topic:'cells', category:'Cell Theory', image:'🔭',
+    q:'Which of these is part of the Cell Theory?',
+    opts:['Cells can appear from nowhere','All cells come from pre-existing cells','Only plants are made of cells','Cells cannot reproduce'], ans:1,
+    explain:'Cell Theory: (1) All living things are made of cells, (2) The cell is the basic unit of life, (3) All cells come from existing cells.' },
+  { topic:'cells', category:'Cell Types', image:'🦠',
+    q:'What is the difference between a prokaryote and a eukaryote?',
+    opts:['Size — prokaryotes are larger','Prokaryotes lack a true nucleus; eukaryotes have one','Eukaryotes have no DNA','Prokaryotes are only found in animals'], ans:1,
+    explain:'Prokaryotes (like bacteria) have no membrane-bound nucleus. Eukaryotes (plants, animals, fungi) have a true nucleus.' },
+  { topic:'cells', category:'Cell Membrane', image:'🫧',
+    q:'What is the main job of the cell membrane?',
+    opts:['Make proteins','Control what enters and exits the cell','Store DNA','Produce energy'], ans:1,
+    explain:'The cell membrane is selectively permeable — it controls what substances can enter and leave the cell.' },
+  { topic:'cells', category:'Organelles', image:'📬',
+    q:'The Golgi apparatus is best compared to which real-world thing?',
+    opts:['A power plant','A library','A post office','A kitchen'], ans:2,
+    explain:'The Golgi apparatus packages and ships proteins to where they\'re needed — just like a post office!' },
+
+  // ── LIVING THINGS ──────────────────────────────────────────
+  { topic:'organisms', category:'Characteristics of Life', image:'🌱',
+    q:'Which of these is a characteristic shared by ALL living things?',
+    opts:['They all move','They all reproduce','They all have green color','They all live in water'], ans:1,
+    explain:'All living things reproduce. Other traits like movement or color vary wildly across species.' },
+  { topic:'organisms', category:'Classification', image:'🐾',
+    q:'In scientific classification, which group is the MOST specific?',
+    opts:['Kingdom','Family','Species','Order'], ans:2,
+    explain:'Classification goes: Domain → Kingdom → Phylum → Class → Order → Family → Genus → Species. Species is the most specific!' },
+  { topic:'organisms', category:'Kingdoms', image:'🍄',
+    q:'Mushrooms belong to which kingdom?',
+    opts:['Plantae','Animalia','Fungi','Protista'], ans:2,
+    explain:'Fungi (mushrooms, molds, yeasts) are their own kingdom. They don\'t photosynthesize — they absorb nutrients from their environment.' },
+  { topic:'organisms', category:'Viruses', image:'🦠',
+    q:'Why are viruses NOT considered living organisms?',
+    opts:['They are too small','They cannot reproduce on their own','They have no protein','They move too fast'], ans:1,
+    explain:'Viruses can only replicate inside a host cell. They lack cellular structure and cannot carry out life processes independently.' },
+  { topic:'organisms', category:'Photosynthesis', image:'🌿',
+    q:'What are the THREE ingredients plants need for photosynthesis?',
+    opts:['Oxygen, glucose, water','Sunlight, CO₂, water','Sunlight, oxygen, glucose','CO₂, nitrogen, sunlight'], ans:1,
+    explain:'6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂. Plants take in CO₂, water, and sunlight to make glucose!' },
+  { topic:'organisms', category:'Cellular Respiration', image:'💨',
+    q:'What gas do animals exhale as a waste product of cellular respiration?',
+    opts:['Oxygen','Nitrogen','Carbon dioxide','Hydrogen'], ans:2,
+    explain:'Cellular respiration: glucose + O₂ → CO₂ + H₂O + ATP energy. CO₂ is the waste product we breathe out.' },
+  { topic:'organisms', category:'Classification', image:'🐟',
+    q:'Which group do fish, amphibians, reptiles, birds, and mammals all belong to?',
+    opts:['Invertebrates','Vertebrates','Arthropods','Mollusks'], ans:1,
+    explain:'All of these animals have a backbone (vertebral column), making them vertebrates!' },
+
+  // ── GENETICS ──────────────────────────────────────────────
+  { topic:'genetics', category:'DNA', image:'🧬',
+    q:'What does DNA stand for?',
+    opts:['Deoxyribonucleic Acid','Dynamic Nuclear Atom','Distributed Nucleic Array','Deoxyribose Natural Allele'], ans:0,
+    explain:'DNA = Deoxyribonucleic Acid. It\'s the molecule that carries genetic instructions for all living organisms.' },
+  { topic:'genetics', category:'Base Pairs', image:'🔗',
+    q:'In DNA, adenine (A) always pairs with which base?',
+    opts:['Guanine (G)','Cytosine (C)','Thymine (T)','Adenine (A)'], ans:2,
+    explain:'DNA base pairing rules: A pairs with T, and G pairs with C. These complementary pairs hold the double helix together.' },
+  { topic:'genetics', category:'Heredity', image:'👨‍👩‍👧',
+    q:'A dominant trait will show if an organism has:',
+    opts:['Two recessive alleles only','At least one dominant allele','No alleles','Only one chromosome'], ans:1,
+    explain:'Dominant alleles "overpower" recessive ones. Even one dominant allele (Dd or DD) will express the dominant trait.' },
+  { topic:'genetics', category:'Punnett Squares', image:'⬛',
+    q:'Two parents are both Tt (tall). What % of offspring will be short (tt)?',
+    opts:['0%','25%','50%','75%'], ans:1,
+    explain:'Tt × Tt gives TT, Tt, Tt, tt. That\'s 1 in 4 = 25% chance of tt (short). Classic Punnett square result!' },
+  { topic:'genetics', category:'Mutations', image:'☢️',
+    q:'A mutation is a change in:',
+    opts:['An organism\'s behavior','The DNA sequence','The cell membrane','Body temperature'], ans:1,
+    explain:'Mutations are changes in the DNA sequence. They can be caused by radiation, chemicals, or copying errors during cell division.' },
+  { topic:'genetics', category:'Chromosomes', image:'🔵',
+    q:'How many chromosomes do most human body cells contain?',
+    opts:['23','46','64','92'], ans:1,
+    explain:'Humans have 46 chromosomes (23 pairs) in each body cell. Sperm and egg cells have only 23 each.' },
+  { topic:'genetics', category:'Genes & Traits', image:'🎨',
+    q:'Which type of characteristic can be inherited from parents?',
+    opts:['A scar from an injury','Speaking a language','Eye color','A sports skill learned by practice'], ans:2,
+    explain:'Inherited traits like eye color, hair color, and blood type are coded in DNA and passed from parent to offspring.' },
+
+  // ── ECOSYSTEMS ──────────────────────────────────────────
+  { topic:'ecosystems', category:'Food Chains', image:'🌿',
+    q:'In a food chain, what are organisms that make their own food called?',
+    opts:['Consumers','Decomposers','Producers','Predators'], ans:2,
+    explain:'Producers (mainly plants) make their own food via photosynthesis. They\'re the base of all food chains.' },
+  { topic:'ecosystems', category:'Food Chains', image:'🐺',
+    q:'A wolf eats a deer that ate grass. The wolf is a:',
+    opts:['Producer','Primary consumer','Secondary consumer','Decomposer'], ans:2,
+    explain:'Grass = producer. Deer = primary consumer (eats producer). Wolf = secondary consumer (eats primary consumer).' },
+  { topic:'ecosystems', category:'Decomposers', image:'🍂',
+    q:'What role do decomposers like fungi and bacteria play in an ecosystem?',
+    opts:['They hunt prey','They break down dead organisms and recycle nutrients','They make food from sunlight','They are eaten by predators'], ans:1,
+    explain:'Decomposers break down dead matter and return nutrients to the soil — essential for cycling nutrients through an ecosystem!' },
+  { topic:'ecosystems', category:'Biomes', image:'🏔️',
+    q:'Which biome receives the LEAST rainfall?',
+    opts:['Tropical rainforest','Temperate forest','Desert','Grassland'], ans:2,
+    explain:'Deserts receive less than 25cm of rainfall per year — the least of any biome. Hot or cold, they\'re defined by dryness.' },
+  { topic:'ecosystems', category:'Population', image:'🐰',
+    q:'If wolves are removed from an ecosystem, what happens to the deer population?',
+    opts:['It decreases','It stays the same','It increases rapidly','Deer go extinct'], ans:2,
+    explain:'Without predators, prey populations grow unchecked. Deer would overpopulate and eventually overconsume vegetation.' },
+  { topic:'ecosystems', category:'Symbiosis', image:'🐟',
+    q:'A clownfish lives in a sea anemone — the fish is protected, the anemone is unaffected. This is:',
+    opts:['Mutualism','Parasitism','Commensalism','Predation'], ans:2,
+    explain:'Commensalism = one organism benefits, the other is unaffected. Mutualism = both benefit. Parasitism = one benefits, one is harmed.' },
+  { topic:'ecosystems', category:'Energy Flow', image:'☀️',
+    q:'What percentage of energy is typically transferred from one trophic level to the next?',
+    opts:['100%','50%','10%','1%'], ans:2,
+    explain:'The 10% rule: only about 10% of energy passes to the next level. 90% is lost as heat. That\'s why food chains are short!' },
+
+  // ── HUMAN BODY ──────────────────────────────────────────
+  { topic:'body', category:'Organ Systems', image:'🫀',
+    q:'What is the main function of the circulatory system?',
+    opts:['Digest food','Transport oxygen and nutrients through the blood','Filter waste from blood','Control body movements'], ans:1,
+    explain:'The circulatory system (heart, blood, blood vessels) pumps blood carrying oxygen and nutrients to every cell in the body.' },
+  { topic:'body', category:'Organ Systems', image:'🫁',
+    q:'Which organ is responsible for gas exchange — taking in O₂ and releasing CO₂?',
+    opts:['Heart','Kidneys','Lungs','Liver'], ans:2,
+    explain:'The lungs perform gas exchange: oxygen from inhaled air enters the bloodstream, while CO₂ waste moves out to be exhaled.' },
+  { topic:'body', category:'Nervous System', image:'🧠',
+    q:'What is the control center of the nervous system?',
+    opts:['Spinal cord','Heart','Brain','Lungs'], ans:2,
+    explain:'The brain is the body\'s command center — it processes information from the senses and sends instructions to the rest of the body.' },
+  { topic:'body', category:'Digestion', image:'🍎',
+    q:'Where does most chemical digestion and nutrient absorption happen?',
+    opts:['Stomach','Large intestine','Small intestine','Mouth'], ans:2,
+    explain:'The small intestine is where most digestion is completed and nutrients are absorbed into the bloodstream.' },
+  { topic:'body', category:'Skeletal System', image:'🦴',
+    q:'How many bones does the adult human body have?',
+    opts:['106','206','306','406'], ans:1,
+    explain:'Adult humans have 206 bones. Babies are born with ~270 — many fuse together as you grow!' },
+  { topic:'body', category:'Immune System', image:'🛡️',
+    q:'White blood cells are part of which body system?',
+    opts:['Digestive system','Circulatory system','Immune system','Endocrine system'], ans:2,
+    explain:'White blood cells (leukocytes) are the body\'s defenders — they identify and destroy pathogens like bacteria and viruses.' },
+  { topic:'body', category:'Cells & Tissues', image:'🔬',
+    q:'What is the correct order from smallest to largest?',
+    opts:['Organ → Tissue → Cell → System','System → Organ → Tissue → Cell','Cell → Tissue → Organ → System','Tissue → Cell → System → Organ'], ans:2,
+    explain:'Cell → Tissue (cells working together) → Organ (tissues working together) → Organ System → Organism.' },
+
+  // ── EVOLUTION ──────────────────────────────────────────
+  { topic:'evolution', category:'Natural Selection', image:'🦋',
+    q:'Who developed the theory of evolution by natural selection?',
+    opts:['Gregor Mendel','Isaac Newton','Charles Darwin','Louis Pasteur'], ans:2,
+    explain:'Charles Darwin proposed natural selection after studying wildlife on the Galápagos Islands during his voyage on HMS Beagle (1831–1836).' },
+  { topic:'evolution', category:'Natural Selection', image:'🦒',
+    q:'A giraffe\'s long neck is an example of:',
+    opts:['A mutation','An adaptation','A recessive trait','Commensalism'], ans:1,
+    explain:'An adaptation is a trait that helps an organism survive in its environment. Long necks let giraffes reach high leaves others can\'t.' },
+  { topic:'evolution', category:'Fossils', image:'🦕',
+    q:'What do fossils provide evidence for?',
+    opts:['The age of the universe','Evolution and how species changed over time','The speed of plate tectonics','Weather patterns'], ans:1,
+    explain:'Fossils show us what ancient organisms looked like and how modern species evolved from them over millions of years.' },
+  { topic:'evolution', category:'Natural Selection', image:'🐸',
+    q:'In a population of frogs, green frogs survive better than brown ones on lily pads. Over time, the population will:',
+    opts:['Become all brown','Become mostly green','Stay 50/50','All frogs will die'], ans:1,
+    explain:'Natural selection! Green frogs survive and reproduce more, passing on the green trait. Over generations, green dominates.' },
+  { topic:'evolution', category:'Adaptations', image:'🌵',
+    q:'A cactus stores water in its thick stem. This is an example of:',
+    opts:['Natural selection happening right now','A behavioral adaptation','A structural adaptation','A genetic mutation'], ans:2,
+    explain:'Structural adaptations are physical features that help survival. A cactus\'s water-storing stem is a structural adaptation to dry desert life.' },
+  { topic:'evolution', category:'Common Ancestry', image:'🧬',
+    q:'Humans and chimpanzees share about 98% of their DNA. This suggests:',
+    opts:['Humans evolved FROM chimps','Humans and chimps share a common ancestor','Chimps are smarter than humans','DNA is the same in all animals'], ans:1,
+    explain:'Similar DNA suggests a shared common ancestor. Humans and chimps diverged from a common ancestor about 6 million years ago.' },
+  { topic:'evolution', category:'Extinction', image:'☄️',
+    q:'Which best describes what happens during a mass extinction?',
+    opts:['One species dies out','Many species die out in a short time','Species evolve faster','Mutations increase'], ans:1,
+    explain:'Mass extinctions (like when the dinosaurs went extinct ~66 million years ago) wipe out large percentages of all species on Earth.' },
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+let selectedTopic='', quizQuestions=[], currentQIdx=0, score=0, correctCount=0, lives=3;
+let timerInterval=null, timerSeconds=15, answered=false, lastRetryTopic=null;
+
+window.onload = () => { buildWordBg(); buildTopicGrid(); };
+
+function buildWordBg(){
+  const c=document.getElementById('wordBg');
+  const words=['DNA','ATP','RNA','CELL','GENE','MITOSIS','MEIOSIS','EVOLUTION','OSMOSIS','PHOTOSYNTHESIS','ORGANISM','NUCLEUS'];
+  for(let i=0;i<14;i++){
+    const el=document.createElement('div'); el.className='word-particle';
+    el.textContent=words[i%words.length];
+    el.style.left=(Math.random()*100)+'vw';
+    el.style.animationDuration=(14+Math.random()*18)+'s';
+    el.style.animationDelay=(-Math.random()*20)+'s';
+    c.appendChild(el);
+  }
+}
+
+function buildTopicGrid(){
+  const grid=document.getElementById('topicGrid'); grid.innerHTML='';
+  TOPICS.forEach(t=>{
+    const count=QUESTIONS.filter(q=>q.topic===t.id).length;
+    const div=document.createElement('div'); div.className='topic-card'+(selectedTopic===t.id?' selected':'');
+    div.innerHTML=`<span class="tc-emoji">${t.emoji}</span><div class="tc-name" style="color:${t.color}">${t.name}</div><div class="tc-count">${count} questions</div>`;
+    div.addEventListener('click',()=>{
+      selectedTopic=t.id;
+      document.querySelectorAll('.topic-card').forEach(c=>{c.classList.remove('selected');c.style.borderColor='';c.style.boxShadow='';});
+      div.classList.add('selected'); div.style.borderColor=t.color; div.style.boxShadow=`0 0 16px ${t.color}55`;
+    });
+    grid.appendChild(div);
+  });
+}
+
+function startQuiz(){
+  const topic=selectedTopic||TOPICS[0].id; selectedTopic=topic; lastRetryTopic=topic;
+  const t=TOPICS.find(t=>t.id===topic);
+  const pool=shuffle(QUESTIONS.filter(q=>q.topic===topic)).slice(0,8);
+  launchQuiz(pool, t?`${t.emoji} ${t.name}`:'Biology');
+}
+
+function startMixedQuiz(){
+  selectedTopic='mixed'; lastRetryTopic=null;
+  launchQuiz(shuffle([...QUESTIONS]).slice(0,12),'🔀 Mixed Topics');
+}
+
+function launchQuiz(questions,label){
+  quizQuestions=questions; currentQIdx=0; score=0; correctCount=0; lives=3; answered=false;
+  document.getElementById('hudTopic').textContent=label;
+  showScreen('quizScreen'); renderQuestion();
+}
+
+function renderQuestion(){
+  answered=false; clearInterval(timerInterval);
+  const q=quizQuestions[currentQIdx], total=quizQuestions.length;
+  const card=document.getElementById('questionCard');
+  card.style.animation='none'; void card.offsetWidth; card.style.animation='';
+  document.getElementById('qNum').textContent=`Q${currentQIdx+1}`;
+  document.getElementById('qCategory').textContent=q.category;
+  document.getElementById('qFormula').textContent=q.formula||'';
+  document.getElementById('qImage').textContent=q.image||'';
+  document.getElementById('qText').textContent=q.q;
+  document.getElementById('progressFill').style.width=(currentQIdx/total*100)+'%';
+  document.getElementById('hudScore').textContent=score;
+  updateLives();
+  const letters=['A','B','C','D'], grid=document.getElementById('answersGrid');
+  grid.innerHTML='';
+  q.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button'); btn.className='answer-btn'; btn.dataset.letter=letters[i]; btn.textContent=opt;
+    btn.addEventListener('click',()=>selectAnswer(i)); grid.appendChild(btn);
+  });
+  document.getElementById('feedbackBar').className='feedback-bar';
+  document.getElementById('nextBtn').classList.remove('visible');
+  timerSeconds=15;
+  const fill=document.getElementById('timerFill');
+  fill.style.transition='none'; fill.style.width='100%'; fill.style.background='linear-gradient(90deg,var(--green),var(--accent))';
+  void fill.offsetWidth;
+  setTimeout(()=>{fill.style.transition='width 15s linear,background 8s linear';fill.style.width='0%';fill.style.background='linear-gradient(90deg,var(--red),#ff8c00)';},50);
+  timerInterval=setInterval(()=>{timerSeconds--;if(timerSeconds<=0){clearInterval(timerInterval);timeOut();}},1000);
+}
+
+function selectAnswer(idx){
+  if(answered) return; answered=true; clearInterval(timerInterval);
+  const q=quizQuestions[currentQIdx], btns=document.querySelectorAll('.answer-btn');
+  btns.forEach(b=>b.disabled=true);
+  const ok=idx===q.ans;
+  btns[idx].classList.add(ok?'correct':'wrong');
+  if(!ok) btns[q.ans].classList.add('reveal-correct');
+  if(ok){ const pts=Math.max(100,timerSeconds*20); score+=pts; correctCount++; showScorePop('+'+pts,btns[idx]); showFeedback(true,'✅ Correct!',q.explain); }
+  else  { lives--; updateLives(); showFeedback(false,'❌ Not quite!',q.explain); if(lives<=0){setTimeout(finishQuiz,1500);return;} }
+  document.getElementById('hudScore').textContent=score;
+  document.getElementById('nextBtn').classList.add('visible');
+}
+
+function timeOut(){
+  if(answered) return; answered=true;
+  const q=quizQuestions[currentQIdx], btns=document.querySelectorAll('.answer-btn');
+  btns.forEach(b=>b.disabled=true); btns[q.ans].classList.add('reveal-correct');
+  lives--; updateLives(); showFeedback(false,'⏰ Time\'s up!',q.explain);
+  if(lives<=0){setTimeout(finishQuiz,1500);return;}
+  document.getElementById('nextBtn').classList.add('visible');
+}
+
+function showFeedback(ok,title,explain){
+  const bar=document.getElementById('feedbackBar'); bar.className='feedback-bar '+(ok?'correct-fb':'wrong-fb');
+  document.getElementById('fbIcon').textContent=ok?'🧬':'💡';
+  document.getElementById('fbText').textContent=title;
+  document.getElementById('fbExplanation').textContent=explain;
+}
+
+function updateLives(){ const h=['❤️','❤️','❤️']; for(let i=0;i<3-lives;i++) h[2-i]='🖤'; document.getElementById('hudLives').textContent=h.join(''); }
+
+function showScorePop(text,el){
+  const rect=el.getBoundingClientRect(), pop=document.createElement('div');
+  pop.className='score-pop'; pop.textContent=text; pop.style.color='#2dffa0';
+  pop.style.left=(rect.left+rect.width/2-30)+'px'; pop.style.top=(rect.top-10)+'px';
+  document.body.appendChild(pop); setTimeout(()=>pop.remove(),1200);
+}
+
+function nextQuestion(){ currentQIdx++; if(currentQIdx>=quizQuestions.length) finishQuiz(); else renderQuestion(); }
+
+function finishQuiz(){
+  clearInterval(timerInterval);
+  const total=quizQuestions.length, accuracy=Math.round(correctCount/total*100);
+  let trophy,title,subtitle;
+  if(accuracy===100)      {trophy='🏆';title='PERFECT SCORE!';subtitle='You\'re a Biology genius!'}
+  else if(accuracy>=80)   {trophy='🥇';title='EXCELLENT!';subtitle='Outstanding biology knowledge!'}
+  else if(accuracy>=60)   {trophy='🥈';title='GOOD JOB!';subtitle='Solid understanding — keep studying!'}
+  else if(accuracy>=40)   {trophy='🥉';title='KEEP TRYING!';subtitle='Review the topics and try again!'}
+  else                    {trophy='📚';title='STUDY TIME!';subtitle='Biology takes practice — you\'ve got this!'}
+  const stars=accuracy>=90?'⭐⭐⭐':accuracy>=60?'⭐⭐':'⭐';
+  document.getElementById('resultsTrophy').textContent=trophy;
+  document.getElementById('resultsTitle').textContent=title;
+  document.getElementById('resultsSubtitle').textContent=subtitle;
+  document.getElementById('resScore').textContent=score;
+  document.getElementById('resCorrect').textContent=correctCount+' / '+total;
+  document.getElementById('resAccuracy').textContent=accuracy+'%';
+  document.getElementById('starRow').textContent=stars;
+  showScreen('resultsScreen');
+  setTimeout(()=>{document.getElementById('gradeBarFill').style.width=accuracy+'%';},120);
+  if(accuracy>=60) spawnConfetti(accuracy>=90?90:45);
+}
+
+function retryQuiz(){ if(lastRetryTopic){selectedTopic=lastRetryTopic;startQuiz();}else startMixedQuiz(); }
+function goMenu(){ clearInterval(timerInterval); showScreen('menuScreen'); buildTopicGrid(); }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+function spawnConfetti(n){
+  const wrap=document.getElementById('confettiWrap'); wrap.innerHTML='';
+  const cols=['#3dff7a','#ffe94d','#ff6b9d','#2dffa0','#29b6f6','#c084fc','#fff'];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div'); el.className='conf';
+    el.style.left=Math.random()*100+'vw'; el.style.background=cols[Math.floor(Math.random()*cols.length)];
+    el.style.animationDuration=(1.8+Math.random()*2.5)+'s'; el.style.animationDelay=(Math.random()*1.5)+'s';
+    el.style.width=(5+Math.random()*9)+'px'; el.style.height=(5+Math.random()*9)+'px';
+    el.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    wrap.appendChild(el); el.addEventListener('animationend',()=>el.remove());
+  }
+}
+
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+</script>
+</body>
+</html>
