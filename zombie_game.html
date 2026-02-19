@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☣️ Dead Zone - Zombie Survivor</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0a0a0a; color:#e5e5e5; font-family:monospace; display:flex; justify-content:center; padding:16px; min-height:100vh; }
+  .wrap { width:100%; max-width:460px; }
+  h1 { color:#ef4444; font-size:20px; text-align:center; letter-spacing:3px; margin-bottom:2px; }
+  .sub { color:#555; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:14px; }
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:10px; }
+  .stat { background:#141414; border:1px solid #2a2a2a; border-radius:6px; padding:8px 4px; text-align:center; }
+  .stat-label { color:#555; font-size:9px; margin-bottom:2px; }
+  .stat-val { color:#00ff88; font-size:15px; font-weight:bold; }
+  .hp-row { display:flex; justify-content:space-between; margin-bottom:3px; }
+  .hp-label { font-size:10px; color:#777; }
+  .hp-num { font-size:10px; font-weight:bold; }
+  .hp-track { background:#1a1a1a; height:10px; border-radius:5px; overflow:hidden; border:1px solid #2a2a2a; margin-bottom:10px; }
+  .hp-fill { height:100%; transition:all 0.3s ease; border-radius:5px; }
+  .scene { background:#111; border:1px solid #ef4444; border-radius:8px; padding:12px; margin-bottom:10px; }
+  .scene-title { color:#ef4444; font-weight:bold; font-size:12px; margin-bottom:5px; }
+  .scene-text { color:#ccc; font-size:12px; line-height:1.5; }
+  .log { background:#0d0d0d; border:1px solid #1f1f1f; border-radius:6px; padding:8px; margin-bottom:10px; }
+  .log-line { color:#888; font-size:11px; padding:2px 0; border-bottom:1px solid #1a1a1a; }
+  .log-line:last-child { border-bottom:none; }
+  .actions { display:grid; gap:8px; margin-bottom:10px; }
+  .two { grid-template-columns:1fr 1fr; }
+  .three { grid-template-columns:1fr 1fr 1fr; }
+  .one { grid-template-columns:1fr; }
+  button { font-family:monospace; font-weight:bold; cursor:pointer; border-radius:8px; font-size:13px; padding:12px 8px; transition:opacity 0.2s; }
+  button:hover { opacity:0.8; }
+  .btn-fight { background:#1a0000; border:2px solid #ef4444; color:#ef4444; }
+  .btn-sneak { background:#001a0a; border:2px solid #00ff88; color:#00ff88; }
+  .btn-heal  { background:#001510; border:2px solid #22c55e; color:#22c55e; }
+  .btn-claim { background:#001a0a; border:2px solid #00ff88; color:#00ff88; font-size:14px; padding:14px; }
+  .btn-next  { background:#0d0d1a; border:2px solid #a78bfa; color:#a78bfa; font-size:14px; padding:14px; }
+  .btn-again { padding:10px 24px; }
+  .btn-again-red { background:#1a0000; border:2px solid #ef4444; color:#ef4444; }
+  .btn-again-gold { background:#0d1a00; border:2px solid #fbbf24; color:#fbbf24; }
+  .endbox { border-radius:8px; padding:18px; text-align:center; margin-bottom:10px; }
+  .endbox-over { background:#1a0000; border:2px solid #ef4444; }
+  .endbox-won  { background:#0d1a00; border:2px solid #fbbf24; }
+  .end-title-over { color:#ef4444; font-size:20px; font-weight:bold; }
+  .end-title-won  { color:#fbbf24; font-size:20px; font-weight:bold; }
+  .end-sub { color:#aaa; font-size:12px; margin-top:6px; }
+  .inventory { background:#0d0d0d; border:1px solid #222; border-radius:8px; padding:10px; }
+  .inv-title { color:#555; font-size:10px; font-weight:bold; margin-bottom:7px; letter-spacing:1px; }
+  .inv-empty { color:#333; font-size:11px; }
+  .inv-items { display:flex; flex-wrap:wrap; gap:5px; }
+  .inv-item  { background:#141414; border:1px solid #333; border-radius:4px; padding:3px 7px; font-size:11px; color:#00ff88; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>☣️ DEAD ZONE</h1>
+  <div class="sub">ZOMBIE APOCALYPSE SURVIVOR</div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">LVL</div><div class="stat-val" id="s-level">1</div></div>
+    <div class="stat"><div class="stat-label">SCORE</div><div class="stat-val" id="s-score">0</div></div>
+    <div class="stat"><div class="stat-label">PWR</div><div class="stat-val" id="s-power">+0%</div></div>
+    <div class="stat"><div class="stat-label">ARMOR</div><div class="stat-val" id="s-armor">0</div></div>
+  </div>
+
+  <div class="hp-row"><span class="hp-label">HEALTH</span><span class="hp-num" id="hp-num">100/100</span></div>
+  <div class="hp-track"><div class="hp-fill" id="hp-fill" style="width:100%;background:#22c55e"></div></div>
+
+  <div class="scene" id="scene">
+    <div class="scene-title" id="scene-title">📍 City Streets — Wave 1/3</div>
+    <div class="scene-text" id="scene-text"></div>
+  </div>
+
+  <div class="log hidden" id="log-box"></div>
+
+  <div class="actions two" id="action-area">
+    <button class="btn-fight" onclick="fight()">⚔️ FIGHT</button>
+    <button class="btn-sneak" onclick="sneak()">🤫 SNEAK</button>
+  </div>
+
+  <div class="inventory">
+    <div class="inv-title" id="inv-title">INVENTORY (0 items)</div>
+    <div id="inv-content"><div class="inv-empty">Beat a level to earn gear!</div></div>
+  </div>
+</div>
+
+<script>
+const EQUIPMENT = [
+  {name:"🔫 Basic Pistol",   power:1.3,  armor:0,  desc:"+30% combat power"},
+  {name:"🛡️ Vest",           power:1.0,  armor:15, desc:"+15 armor"},
+  {name:"💥 Shotgun",         power:1.6,  armor:0,  desc:"+60% combat power"},
+  {name:"🪖 Kevlar Helmet",  power:1.0,  armor:20, desc:"+20 armor"},
+  {name:"🔫 Assault Rifle",  power:1.9,  armor:0,  desc:"+90% combat power"},
+  {name:"⚔️ Military Armor", power:1.0,  armor:35, desc:"+35 armor"},
+  {name:"💣 Explosives",     power:2.3,  armor:0,  desc:"+130% power"},
+  {name:"🎖️ Tactical Suit", power:1.1,  armor:25, desc:"+10% power +25 armor"},
+  {name:"🩹 Med Kit",        power:1.0,  armor:0,  desc:"Restore 30 HP", heal:30},
+  {name:"🔪 Combat Knife",   power:1.15, armor:5,  desc:"+15% power +5 armor"},
+];
+const ZONES = ["City Streets","Abandoned Hospital","Downtown District","Airport Terminal","Final Stronghold"];
+
+let G = {};
+function initGame() {
+  G = { level:1, health:100, maxHealth:100, score:0, equipment:[], powerMult:1.0, armor:0, wave:1, totalWaves:3, log:[], phase:"wave" };
+  renderAll();
+  showWave();
+}
+
+function getEnemies(level, wave) {
+  return { count: 3 + level*2 + wave, dmg: 8 + level*4 + wave*2 };
+}
+
+function showWave() {
+  const {count, dmg} = getEnemies(G.level, G.wave);
+  const survRate = Math.max(20, Math.min(95, 70 - G.level*5 - G.wave*3 + G.armor + (G.powerMult-1)*30));
+  setText('scene-title', `📍 ${ZONES[G.level-1]} — Wave ${G.wave}/${G.totalWaves}`);
+  setText('scene-text', `A horde of ${count} zombies approaches!\nEstimated damage: ~${dmg}\nSurvival rate: ${Math.round(survRate)}%`);
+  const hasMedKit = G.equipment.some(e=>e.name==="🩹 Med Kit");
+  setActions(hasMedKit ? 'three' : 'two',
+    `<button class="btn-fight" onclick="fight()">⚔️ FIGHT</button>
+     <button class="btn-sneak" onclick="sneak()">🤫 SNEAK</button>
+     ${hasMedKit ? '<button class="btn-heal" onclick="useMedKit()">🩹 HEAL</button>' : ''}`
+  );
+}
+
+function fight() {
+  const {count, dmg} = getEnemies(G.level, G.wave);
+  const pp = 20 * G.powerMult, rd = Math.max(2, dmg - G.armor * 0.6);
+  let d = 0, result;
+  if (pp >= count * 2.5) { result = `💥 Dominated! Wiped ${count} zombies. No damage!`; G.score += count*60; }
+  else if (pp >= count * 1.5) { d = Math.floor(rd*0.4); result = `⚔️ Victory! Killed all ${count}. Took ${d} dmg.`; G.score += count*40; }
+  else { d = Math.floor(rd*0.8); result = `🩸 Tough fight! Took ${d} dmg.`; G.score += Math.floor(count*0.6)*25; }
+  resolveWave(d, result);
+}
+
+function sneak() {
+  const {count, dmg} = getEnemies(G.level, G.wave);
+  const ok = Math.random() < Math.max(0.2, 0.7 - G.level*0.08);
+  let d = 0, result;
+  if (ok) { result = `🤫 Sneaked past ${count} zombies! No damage.`; G.score += count*15; }
+  else { d = Math.floor(Math.max(2, dmg - G.armor*0.4)*0.65); result = `👀 Spotted! Took ${d} dmg escaping.`; G.score += count*8; }
+  resolveWave(d, result);
+}
+
+function useMedKit() {
+  const healed = Math.min(G.maxHealth, G.health+30) - G.health;
+  G.health += healed;
+  G.equipment = G.equipment.filter(e=>e.name!=="🩹 Med Kit");
+  pushLog(`🩹 Used Med Kit! +${healed} HP.`);
+  renderAll(); showWave();
+}
+
+function resolveWave(damage, result) {
+  G.health = Math.max(0, G.health - damage);
+  pushLog(result);
+  renderAll();
+  if (G.health <= 0) { gameOver(); return; }
+  if (G.wave >= G.totalWaves) { levelComplete(); return; }
+  G.wave++;
+  showWave();
+}
+
+function levelComplete() {
+  setText('scene-title', `🏆 Level ${G.level} Complete!`);
+  setText('scene-text', `You survived all ${G.totalWaves} waves!\nClaim your equipment reward to continue.`);
+  setActions('one', `<button class="btn-claim" onclick="claimReward()">🎁 CLAIM EQUIPMENT REWARD</button>`);
+}
+
+function claimReward() {
+  const avail = EQUIPMENT.filter(e => !G.equipment.find(o=>o.name===e.name));
+  const r = avail[Math.floor(Math.random()*avail.length)];
+  if (r.heal) G.health = Math.min(G.maxHealth, G.health + r.heal);
+  G.equipment.push(r);
+  G.powerMult *= r.power;
+  G.armor += (r.armor||0);
+  G.score += 500 + G.level*200;
+  pushLog(`🎁 Unlocked: ${r.name}!`);
+  renderAll();
+  setText('scene-title', `🎁 Equipment Unlocked!`);
+  setText('scene-text', `${r.name}\n${r.desc}`);
+  if (G.level >= 5) {
+    setActions('one', `<button class="btn-next" onclick="winGame()">🏆 CLAIM VICTORY</button>`);
+  } else {
+    setActions('one', `<button class="btn-next" onclick="nextLevel()">➡️ ENTER LEVEL ${G.level+1}</button>`);
+  }
+}
+
+function nextLevel() {
+  G.level++;
+  G.wave = 1;
+  G.health = Math.min(G.maxHealth, G.health+20);
+  pushLog(`➡️ Entering Level ${G.level}…`);
+  renderAll();
+  showWave();
+}
+
+function gameOver() {
+  setText('scene-title','💀 GAME OVER');
+  setText('scene-text',`You fell in ${ZONES[G.level-1]}.\nLevel: ${G.level} | Score: ${G.score} | Gear: ${G.equipment.length}`);
+  setActions('one',`<button class="btn-fight btn-again" onclick="initGame()">🔄 PLAY AGAIN</button>`);
+}
+
+function winGame() {
+  setText('scene-title','🏆 YOU SURVIVED THE APOCALYPSE!');
+  setText('scene-text',`Final Score: ${G.score}\nEquipment Collected: ${G.equipment.length}/10\n\nYou are a legend.`);
+  setActions('one',`<button class="btn-next btn-again" onclick="initGame()">🔄 PLAY AGAIN</button>`);
+}
+
+function pushLog(msg) {
+  G.log = [...G.log.slice(-5), msg];
+  const box = document.getElementById('log-box');
+  box.classList.remove('hidden');
+  box.innerHTML = G.log.slice(-3).map((l,i)=>`<div class="log-line" style="${i<2?'border-bottom:1px solid #1a1a1a':''}">${l}</div>`).join('');
+}
+
+function renderAll() {
+  setText('s-level', G.level<=5?G.level:'✓');
+  setText('s-score', G.score);
+  setText('s-power', `+${((G.powerMult-1)*100).toFixed(0)}%`);
+  setText('s-armor', G.armor);
+  const hp = Math.max(0,(G.health/G.maxHealth)*100);
+  const hc = hp>60?'#22c55e':hp>30?'#f59e0b':'#ef4444';
+  document.getElementById('hp-fill').style.width = hp+'%';
+  document.getElementById('hp-fill').style.background = hc;
+  document.getElementById('hp-num').style.color = hc;
+  setText('hp-num', `${G.health}/${G.maxHealth}`);
+  setText('inv-title', `INVENTORY (${G.equipment.length} items)`);
+  const ic = document.getElementById('inv-content');
+  ic.innerHTML = G.equipment.length===0
+    ? '<div class="inv-empty">Beat a level to earn gear!</div>'
+    : `<div class="inv-items">${G.equipment.map(e=>`<div class="inv-item">${e.name}</div>`).join('')}</div>`;
+}
+
+function setText(id, val) { document.getElementById(id).textContent = val; }
+function setActions(cols, html) {
+  const area = document.getElementById('action-area');
+  area.className = `actions ${cols}`;
+  area.innerHTML = html;
+}
+
+initGame();
+</script>
+</body>
+</html>
