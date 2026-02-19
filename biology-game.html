@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌍 Ecosystem Collapse</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cabin:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg:       #0c120a;
+  --surface:  #131a10;
+  --card:     #1a2416;
+  --border:   rgba(120,180,80,0.2);
+  --green:    #7cb842;
+  --lime:     #b5e550;
+  --amber:    #ffb300;
+  --red:      #e53935;
+  --sky:      #4fc3f7;
+  --text:     #d4e8c2;
+  --muted:    #6b8c5a;
+  --danger:   #ff5722;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'Cabin', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  display: flex; align-items: flex-start; justify-content: center;
+  overflow-x: hidden;
+  padding-top: 16px;
+  padding-bottom: 40px;
+}
+
+/* Animated background particles */
+.eco-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.eco-particle {
+  position: absolute; font-size: 1.4rem; opacity: 0.07;
+  animation: ecoDrift linear infinite;
+}
+@keyframes ecoDrift {
+  0%   { transform: translateY(105vh) rotate(0deg); opacity: 0; }
+  5%   { opacity: 0.07; }
+  95%  { opacity: 0.07; }
+  100% { transform: translateY(-10vh) rotate(180deg); opacity: 0; }
+}
+
+.screen { display: none; position: relative; z-index: 1; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+/* ═══════════════════════════════════════════
+   MENU
+   ═══════════════════════════════════════════ */
+#menuScreen { text-align: center; padding: 24px 20px; max-width: 700px; width: 100%; }
+
+.menu-planet {
+  font-size: 6rem; display: block; margin-bottom: 8px;
+  filter: drop-shadow(0 0 32px rgba(124,184,66,0.8)) drop-shadow(0 0 64px rgba(124,184,66,0.3));
+  animation: planetPulse 4s ease-in-out infinite;
+}
+@keyframes planetPulse {
+  0%,100% { transform: scale(1); filter: drop-shadow(0 0 32px rgba(124,184,66,0.8)); }
+  50%      { transform: scale(1.06); filter: drop-shadow(0 0 52px rgba(124,184,66,1)); }
+}
+
+.menu-title {
+  font-family: 'Bebas Neue', cursive; font-size: 4rem; letter-spacing: 6px;
+  color: var(--lime); line-height: 1; margin-bottom: 2px;
+  text-shadow: 3px 3px 0 #1a3008, 0 0 40px rgba(181,229,80,0.4);
+}
+.menu-crash { font-family:'Bebas Neue',cursive; font-size:2.4rem; letter-spacing:8px; color:var(--red); text-shadow:2px 2px 0 #5c0000; margin-bottom:6px; }
+.menu-sub { font-size:0.82rem; color:var(--muted); letter-spacing:3px; text-transform:uppercase; margin-bottom:26px; }
+
+/* Food web explainer */
+.web-explainer {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 14px 20px; margin-bottom: 24px; width: 100%;
+}
+.we-title { font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:2px; margin-bottom:10px; }
+.food-chain-row {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 1.5rem; flex-wrap: wrap;
+}
+.chain-arrow { color: var(--green); font-size: 1rem; font-weight: 700; }
+.chain-label { font-size: 0.58rem; color: var(--muted); display: block; text-align: center; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+.chain-item { text-align: center; }
+
+/* Level cards */
+.level-cards { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 22px; width: 100%; }
+.lvl-card {
+  background: var(--card); border: 2px solid var(--border); border-radius: 14px;
+  padding: 12px 8px; text-align: center; cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.lvl-card:hover:not(.locked) { transform: translateY(-4px) scale(1.05); border-color: var(--lime); box-shadow: 0 0 20px rgba(181,229,80,0.3); }
+.lvl-card:active:not(.locked) { transform: scale(0.97); }
+.lvl-card.locked { opacity: 0.35; cursor: not-allowed; }
+.lvl-card.selected { border-color: var(--lime); box-shadow: 0 0 18px rgba(181,229,80,0.4); }
+.lvl-card.done { border-color: var(--amber); }
+.lc-num { font-family:'Bebas Neue',cursive; font-size:1.8rem; color:var(--lime); line-height:1; }
+.lc-biome { font-size:1.4rem; display:block; margin:3px 0; }
+.lc-name { font-size:0.58rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+.lc-star { position:absolute; top:4px; right:6px; font-size:0.8rem; }
+.lvl-card.done .lc-num { color: var(--amber); }
+
+.play-btn {
+  font-family: 'Bebas Neue', cursive; font-size: 1.6rem; letter-spacing: 4px;
+  background: linear-gradient(135deg, var(--green), #2d5a00);
+  color: #fff; border: none; border-radius: 16px;
+  padding: 16px 60px; cursor: pointer; width: 100%;
+  box-shadow: 0 6px 28px rgba(124,184,66,0.45);
+  transition: transform 0.12s, box-shadow 0.12s;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.4); margin-bottom: 0;
+}
+.play-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 36px rgba(124,184,66,0.65); }
+.play-btn:active { transform: scale(0.98); }
+
+/* ═══════════════════════════════════════════
+   GAME SCREEN
+   ═══════════════════════════════════════════ */
+#gameScreen { width: 100%; max-width: 980px; padding: 10px 14px; gap: 10px; }
+
+/* Top HUD */
+.game-hud {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+}
+.hud-pill {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 5px 14px; text-align: center;
+}
+.hud-pill .hp-label { font-size:0.52rem; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; }
+.hud-pill .hp-val { font-family:'Bebas Neue',cursive; font-size:1.3rem; }
+.hud-biome {
+  font-family: 'Bebas Neue', cursive; font-size: 1.2rem; letter-spacing: 2px;
+  color: var(--lime); flex: 1; text-align: center;
+}
+.back-btn { font-size:0.7rem; font-weight:700; background:var(--card); border:1px solid var(--border); color:var(--muted); border-radius:8px; padding:6px 12px; cursor:pointer; transition:color 0.15s; }
+.back-btn:hover { color:var(--text); }
+
+/* Health bar at top */
+.ecosystem-health-wrap {
+  width: 100%;
+  background: rgba(255,255,255,0.05); border-radius:99px; height:10px;
+  border: 1px solid var(--border); overflow: hidden; position: relative;
+}
+.ecosystem-health-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--green), var(--lime));
+  box-shadow: 0 0 12px rgba(124,184,66,0.5);
+  transition: width 0.6s ease, background 0.5s;
+}
+.ecosystem-health-label {
+  font-size: 0.65rem; color: var(--muted); display: flex; justify-content: space-between; margin-bottom: 3px;
+}
+
+/* Main game area */
+.game-main { display: flex; gap: 12px; width: 100%; }
+
+/* Food web panel (left) */
+.food-web-panel {
+  flex: 1; background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 10px;
+}
+.fwp-title { font-family:'Bebas Neue',cursive; font-size:0.9rem; letter-spacing:2px; color:var(--muted); text-align:center; margin-bottom:2px; }
+
+/* Species row */
+.species-row {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 10px 12px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.species-row.critical { border-color: var(--red); box-shadow: 0 0 14px rgba(229,57,53,0.35); animation: criticalPulse 1.2s ease-in-out infinite; }
+.species-row.warning  { border-color: var(--amber); box-shadow: 0 0 10px rgba(255,179,0,0.25); }
+.species-row.thriving { border-color: rgba(181,229,80,0.35); }
+@keyframes criticalPulse { 0%,100%{box-shadow:0 0 14px rgba(229,57,53,0.35)} 50%{box-shadow:0 0 28px rgba(229,57,53,0.7)} }
+
+.sr-header { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.sr-emoji  { font-size: 1.6rem; }
+.sr-info   { flex: 1; }
+.sr-name   { font-weight: 700; font-size: 0.88rem; color: var(--text); }
+.sr-role   { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.sr-pop    { font-family: 'Bebas Neue', cursive; font-size: 1.4rem; }
+.sr-controls { display: flex; gap: 6px; align-items: center; }
+.sr-btn {
+  width: 28px; height: 28px; border-radius: 8px; border: none;
+  font-size: 1rem; font-weight: 900; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.1s, opacity 0.15s; font-family: 'Cabin', sans-serif;
+}
+.sr-btn:hover { transform: scale(1.15); }
+.sr-btn:active { transform: scale(0.95); }
+.sr-btn-plus  { background: rgba(124,184,66,0.25); color: var(--lime); border: 1px solid rgba(124,184,66,0.4); }
+.sr-btn-minus { background: rgba(229,57,53,0.2);  color: #ff8a80; border: 1px solid rgba(229,57,53,0.3); }
+.sr-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+.sr-cost { font-size: 0.6rem; color: var(--muted); text-align: center; }
+
+/* Population bar */
+.pop-bar-wrap { background: rgba(0,0,0,0.3); border-radius:99px; height:7px; overflow:hidden; margin-top:4px; }
+.pop-bar-fill { height:100%; border-radius:99px; transition: width 0.5s ease, background 0.4s; }
+
+/* Tier dividers */
+.tier-label { font-size:0.58rem; color:var(--muted); text-transform:uppercase; letter-spacing:2px; text-align:center; padding: 2px 0; opacity:0.7; }
+
+/* Event / threat panel (right) */
+.event-panel {
+  width: 260px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.turn-display {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 12px; text-align: center;
+}
+.td-label { font-size:0.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px; }
+.td-years { font-family:'Bebas Neue',cursive; font-size:2.4rem; color:var(--lime); line-height:1; }
+.td-target { font-size:0.68rem; color:var(--muted); }
+
+.actions-display {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 10px 12px; text-align: center;
+}
+.ad-label { font-size:0.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px; }
+.ad-actions { font-family:'Bebas Neue',cursive; font-size:2rem; color:var(--amber); }
+.ad-hint { font-size:0.62rem; color:var(--muted); margin-top:2px; }
+
+/* Threat card */
+.threat-card {
+  background: var(--card); border: 2px solid rgba(255,87,34,0.35);
+  border-radius: 14px; padding: 12px;
+  animation: threatIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes threatIn { from{transform:translateY(-10px) scale(0.95);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
+.tc-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.tc-icon { font-size:1.8rem; }
+.tc-title { font-family:'Bebas Neue',cursive; font-size:1.1rem; color:var(--danger); letter-spacing:1px; }
+.tc-type  { font-size:0.6rem; color:var(--muted); text-transform:uppercase; }
+.tc-desc  { font-size:0.76rem; color:var(--text); line-height:1.45; margin-bottom:8px; }
+.tc-effect { font-size:0.68rem; color:#ff8a80; background:rgba(229,57,53,0.1); border-radius:7px; padding:5px 8px; }
+
+.no-threat {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 14px; text-align: center;
+  color: var(--muted); font-size: 0.78rem; line-height: 1.5;
+}
+.no-threat .nt-icon { font-size: 2rem; display: block; margin-bottom: 6px; }
+
+/* Fact box */
+.fact-box {
+  background: rgba(21,58,10,0.6); border: 1px solid rgba(124,184,66,0.2);
+  border-left: 3px solid var(--green); border-radius: 0 12px 12px 0;
+  padding: 8px 12px; font-size:0.71rem; color:var(--text); line-height:1.45;
+}
+.fact-box strong { color: var(--lime); display: block; margin-bottom: 2px; }
+
+/* Next turn button */
+.next-turn-btn {
+  font-family: 'Bebas Neue', cursive; font-size: 1.2rem; letter-spacing: 3px;
+  background: linear-gradient(135deg, var(--green), #2d5a00);
+  color: #fff; border: none; border-radius: 13px;
+  padding: 13px; cursor: pointer; width: 100%;
+  box-shadow: 0 4px 18px rgba(124,184,66,0.4);
+  transition: transform 0.12s, box-shadow 0.12s;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.4);
+}
+.next-turn-btn:hover { transform: translateY(-2px); box-shadow: 0 7px 22px rgba(124,184,66,0.6); }
+.next-turn-btn:active { transform: scale(0.97); }
+
+/* ═══════════════════════════════════════════
+   RESULTS
+   ═══════════════════════════════════════════ */
+#resultsScreen { text-align: center; padding: 30px 24px; max-width: 520px; width: 100%; }
+.res-icon { font-size: 5rem; display: block; margin-bottom: 10px; animation: resBounce 0.9s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes resBounce { from{transform:scale(0) rotate(-90deg);opacity:0} to{transform:scale(1) rotate(0);opacity:1} }
+.res-title { font-family:'Bebas Neue',cursive; font-size:2.6rem; letter-spacing:4px; margin-bottom:4px; }
+.res-sub   { font-size:0.88rem; color:var(--muted); margin-bottom:24px; line-height:1.5; }
+.res-stats {
+  display: grid; grid-template-columns:repeat(3,1fr); gap:12px;
+  background:var(--card); border:1.5px solid var(--border); border-radius:18px;
+  padding:20px; margin-bottom:18px; width:100%;
+}
+.rs .rs-val { font-family:'Bebas Neue',cursive; font-size:2rem; display:block; }
+.rs .rs-lbl { font-size:0.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; }
+.res-fact { background:rgba(21,58,10,0.6); border:1px solid rgba(124,184,66,0.2); border-radius:12px; padding:12px 16px; font-size:0.78rem; color:var(--text); line-height:1.5; margin-bottom:20px; text-align:left; }
+.res-fact strong { color:var(--lime); }
+.stars-row { font-size:2rem; letter-spacing:8px; margin-bottom:20px; }
+.res-btns { display:flex; gap:10px; width:100%; }
+.rbtn { flex:1; font-family:'Bebas Neue',cursive; font-size:1rem; letter-spacing:2px; border-radius:13px; padding:13px; cursor:pointer; border:none; transition:transform 0.12s; }
+.rbtn:hover { transform:translateY(-2px); }
+.rbtn-retry { background:linear-gradient(135deg,var(--green),#2d5a00); color:#fff; box-shadow:0 4px 16px rgba(124,184,66,0.4); }
+.rbtn-menu  { background:var(--surface); border:1.5px solid var(--border); color:var(--text); }
+
+/* Confetti */
+.conf-layer { position:fixed; inset:0; pointer-events:none; z-index:200; overflow:hidden; }
+.cp { position:absolute; border-radius:2px; animation:cpFall linear forwards; }
+@keyframes cpFall { 0%{opacity:1;transform:translateY(-10px) rotate(0)} 100%{opacity:0;transform:translateY(105vh) rotate(540deg)} }
+
+/* Toast */
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 10px 20px;
+  font-size: 0.82rem; font-weight: 600; z-index: 100;
+  animation: toastIn 0.3s ease both;
+  pointer-events: none; white-space: nowrap;
+}
+@keyframes toastIn { from{transform:translateX(-50%) translateY(-10px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+</style>
+</head>
+<body>
+
+<div class="eco-bg" id="ecoBg"></div>
+<div class="conf-layer" id="confLayer"></div>
+
+<!-- ═══════════ MENU ═══════════ -->
+<div id="menuScreen" class="screen active">
+  <span class="menu-planet">🌍</span>
+  <div class="menu-title">ECOSYSTEM</div>
+  <div class="menu-crash">COLLAPSE</div>
+  <div class="menu-sub">Biology Mini-Game · 7th Grade · Food Webs & Balance</div>
+
+  <div class="web-explainer">
+    <div class="we-title">⚡ How a Food Web Works</div>
+    <div class="food-chain-row">
+      <div class="chain-item"><span>☀️</span><span class="chain-label">Sun</span></div>
+      <span class="chain-arrow">→</span>
+      <div class="chain-item"><span>🌿</span><span class="chain-label">Producer</span></div>
+      <span class="chain-arrow">→</span>
+      <div class="chain-item"><span>🐇</span><span class="chain-label">Primary<br>Consumer</span></div>
+      <span class="chain-arrow">→</span>
+      <div class="chain-item"><span>🦊</span><span class="chain-label">Secondary<br>Consumer</span></div>
+      <span class="chain-arrow">→</span>
+      <div class="chain-item"><span>🦅</span><span class="chain-label">Apex<br>Predator</span></div>
+      <span class="chain-arrow">→</span>
+      <div class="chain-item"><span>🍄</span><span class="chain-label">Decomposer</span></div>
+    </div>
+  </div>
+
+  <div class="level-cards" id="levelCards"></div>
+  <button class="play-btn" id="playBtn" onclick="startGame()">🌱 MANAGE THE ECOSYSTEM</button>
+</div>
+
+<!-- ═══════════ GAME ═══════════ -->
+<div id="gameScreen" class="screen">
+  <div class="game-hud">
+    <div class="hud-pill"><div class="hp-label">Level</div><div class="hp-val" id="hudLevel" style="color:var(--lime)">1</div></div>
+    <div class="hud-pill"><div class="hp-label">Score</div><div class="hp-val" id="hudScore" style="color:var(--amber)">0</div></div>
+    <div class="hud-biome" id="hudBiome">🌲 Temperate Forest</div>
+    <div class="hud-pill"><div class="hp-label">Health</div><div class="hp-val" id="hudHealth" style="color:var(--green)">100%</div></div>
+    <button class="back-btn" onclick="goMenu()">← Menu</button>
+  </div>
+
+  <div class="ecosystem-health-label">
+    <span>Ecosystem Health</span><span id="healthPct">100%</span>
+  </div>
+  <div class="ecosystem-health-wrap">
+    <div class="ecosystem-health-fill" id="healthBar" style="width:100%"></div>
+  </div>
+
+  <div class="game-main">
+    <div class="food-web-panel" id="foodWebPanel">
+      <div class="fwp-title">🌿 FOOD WEB</div>
+      <!-- Species rows injected here -->
+    </div>
+
+    <div class="event-panel">
+      <div class="turn-display">
+        <div class="td-label">Years Survived</div>
+        <div class="td-years" id="turnDisplay">0</div>
+        <div class="td-target" id="targetDisplay">Goal: survive 10 years</div>
+      </div>
+
+      <div class="actions-display">
+        <div class="ad-label">Actions Left</div>
+        <div class="ad-actions" id="actionsDisplay">3</div>
+        <div class="ad-hint">Use wisely each turn</div>
+      </div>
+
+      <div id="threatArea">
+        <div class="no-threat"><span class="nt-icon">☀️</span>No threats yet.<br>Click Next Year to advance.</div>
+      </div>
+
+      <div class="fact-box" id="factBox">
+        <strong>💡 Ecology Tip</strong>
+        Adjust species populations to keep the ecosystem balanced. Every species matters!
+      </div>
+
+      <button class="next-turn-btn" id="nextTurnBtn" onclick="nextTurn()">⏭ NEXT YEAR →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ RESULTS ═══════════ -->
+<div id="resultsScreen" class="screen">
+  <span class="res-icon" id="resIcon">🏆</span>
+  <div class="res-title" id="resTitle">Ecosystem Saved!</div>
+  <div class="res-sub"  id="resSub">You kept the food web balanced!</div>
+  <div class="res-stats">
+    <div class="rs"><span class="rs-val" style="color:var(--lime)"  id="resYears">0</span><span class="rs-lbl">Years</span></div>
+    <div class="rs"><span class="rs-val" style="color:var(--amber)" id="resScore2">0</span><span class="rs-lbl">Score</span></div>
+    <div class="rs"><span class="rs-val" style="color:var(--sky)"   id="resSaved">0</span><span class="rs-lbl">Species Saved</span></div>
+  </div>
+  <div class="res-fact" id="resFact"><strong>🌍 What you learned:</strong> Removing any species from a food web can trigger a cascade — all connected species are affected!</div>
+  <div class="stars-row" id="resStars">⭐⭐⭐</div>
+  <div class="res-btns">
+    <button class="rbtn rbtn-retry" onclick="retryGame()">🔄 Retry</button>
+    <button class="rbtn rbtn-menu"  onclick="goMenu()">🏠 Menu</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  BIOME DEFINITIONS
+// ═══════════════════════════════════════════════════
+const BIOMES = [
+  {
+    num: 1, name: 'Temperate Forest', emoji: '🌲', yearsNeeded: 8, actionsPerTurn: 3,
+    species: [
+      { id:'trees',   name:'Oak Trees',     emoji:'🌳', role:'Producer',           tier:0, pop:80, min:20, max:120, color:'#4caf50' },
+      { id:'berries', name:'Berry Bushes',  emoji:'🍓', role:'Producer',           tier:0, pop:60, min:15, max:100, color:'#e91e63' },
+      { id:'grass1',  name:'Forest Grass',  emoji:'🌿', role:'Producer',           tier:0, pop:70, min:18, max:110, color:'#66bb6a' },
+      { id:'deer',    name:'Deer',          emoji:'🦌', role:'Primary Consumer',   tier:1, pop:50, min:10, max:90,  color:'#8d6e63' },
+      { id:'rabbit',  name:'Rabbits',       emoji:'🐇', role:'Primary Consumer',   tier:1, pop:70, min:15, max:110, color:'#bdbdbd' },
+      { id:'fox',     name:'Foxes',         emoji:'🦊', role:'Secondary Consumer', tier:2, pop:30, min:8,  max:60,  color:'#ff7043' },
+      { id:'wolf',    name:'Wolves',        emoji:'🐺', role:'Apex Predator',      tier:3, pop:20, min:5,  max:40,  color:'#78909c' },
+      { id:'fungi',   name:'Fungi',         emoji:'🍄', role:'Decomposer',         tier:4, pop:65, min:20, max:100, color:'#8d6e63' },
+      { id:'worm1',   name:'Earthworms',    emoji:'🪱', role:'Decomposer',         tier:4, pop:80, min:25, max:120, color:'#a1887f' },
+    ],
+    eats: { deer:'trees,berries,grass1', rabbit:'berries,grass1', fox:'rabbit', wolf:'deer,fox', fungi:'all_dead', worm1:'all_dead' },
+    facts: ['Wolves keep deer from overgrazing — their presence shapes the whole forest!','Decomposers like fungi return nutrients to soil so plants can grow.','Rabbits can double their population every 3 months if unchecked!','Earthworms aerate the soil, helping plants absorb water and nutrients.'],
+    threats: ['drought','overhunting_wolf','invasive_vine','fire'],
+  },
+  {
+    num: 2, name: 'Ocean', emoji: '🌊', yearsNeeded: 9, actionsPerTurn: 3,
+    species: [
+      { id:'algae',    name:'Algae',         emoji:'🌿', role:'Producer',           tier:0, pop:90, min:25, max:130, color:'#26a69a' },
+      { id:'seagrass', name:'Seagrass',      emoji:'🪸', role:'Producer',           tier:0, pop:70, min:18, max:110, color:'#00897b' },
+      { id:'krill',    name:'Krill',         emoji:'🦐', role:'Primary Consumer',   tier:1, pop:80, min:20, max:120, color:'#ef9a9a' },
+      { id:'fish',     name:'Small Fish',    emoji:'🐟', role:'Primary Consumer',   tier:1, pop:65, min:15, max:100, color:'#42a5f5' },
+      { id:'turtle',   name:'Sea Turtles',   emoji:'🐢', role:'Primary Consumer',   tier:1, pop:25, min:6,  max:50,  color:'#66bb6a' },
+      { id:'seal',     name:'Seals',         emoji:'🦭', role:'Secondary Consumer', tier:2, pop:35, min:8,  max:60,  color:'#90a4ae' },
+      { id:'shark',    name:'Sharks',        emoji:'🦈', role:'Apex Predator',      tier:3, pop:18, min:4,  max:35,  color:'#607d8b' },
+      { id:'whale',    name:'Blue Whales',   emoji:'🐋', role:'Apex Predator',      tier:3, pop:10, min:3,  max:25,  color:'#1565c0' },
+      { id:'bacteria', name:'Sea Bacteria',  emoji:'🦠', role:'Decomposer',         tier:4, pop:70, min:25, max:110, color:'#80cbc4' },
+    ],
+    eats: { krill:'algae', fish:'krill,algae', turtle:'seagrass', seal:'fish', shark:'fish,seal', whale:'krill', bacteria:'all_dead' },
+    facts: ['Sharks are apex predators — remove them and seal populations explode!','Blue whales eat up to 40 million krill per day.','Ocean algae produces over 50% of Earth\'s oxygen!','Sea turtles help maintain seagrass beds by grazing — keeping them healthy!'],
+    threats: ['ocean_warming','plastic_pollution','overfishing','algae_bloom'],
+  },
+  {
+    num: 3, name: 'Savanna', emoji: '🌾', yearsNeeded: 10, actionsPerTurn: 3,
+    species: [
+      { id:'grass',    name:'Savanna Grass', emoji:'🌾', role:'Producer',           tier:0, pop:100,min:30, max:140, color:'#cddc39' },
+      { id:'acacia',   name:'Acacia Trees',  emoji:'🌴', role:'Producer',           tier:0, pop:50, min:12, max:80,  color:'#8bc34a' },
+      { id:'shrub',    name:'Thorny Shrubs', emoji:'🌵', role:'Producer',           tier:0, pop:55, min:14, max:85,  color:'#afb42b' },
+      { id:'zebra',    name:'Zebras',        emoji:'🦓', role:'Primary Consumer',   tier:1, pop:60, min:12, max:95,  color:'#bdbdbd' },
+      { id:'giraffe',  name:'Giraffes',      emoji:'🦒', role:'Primary Consumer',   tier:1, pop:30, min:8,  max:55,  color:'#ff8f00' },
+      { id:'elephant', name:'Elephants',     emoji:'🐘', role:'Primary Consumer',   tier:1, pop:20, min:5,  max:40,  color:'#90a4ae' },
+      { id:'hyena',    name:'Hyenas',        emoji:'🐗', role:'Secondary Consumer', tier:2, pop:25, min:6,  max:50,  color:'#795548' },
+      { id:'lion',     name:'Lions',         emoji:'🦁', role:'Apex Predator',      tier:3, pop:15, min:4,  max:30,  color:'#ffa000' },
+      { id:'cheetah',  name:'Cheetahs',      emoji:'🐆', role:'Apex Predator',      tier:3, pop:12, min:3,  max:25,  color:'#ff8f00' },
+      { id:'vulture',  name:'Vultures',      emoji:'🦅', role:'Decomposer',         tier:4, pop:40, min:10, max:70,  color:'#455a64' },
+    ],
+    eats: { zebra:'grass', giraffe:'acacia', elephant:'acacia,shrub', hyena:'zebra', lion:'zebra,giraffe', cheetah:'zebra', vulture:'all_dead' },
+    facts: ['Giraffes\' long necks are an adaptation — they reach leaves other animals can\'t!','Lions hunt in prides (groups) to take down large prey like zebras.','Without vultures, carcasses would spread disease across the savanna.','Elephants are "ecosystem engineers" — they knock down trees, creating clearings for other animals.','Cheetahs are the fastest land animals, reaching 112 km/h in short bursts!'],
+    threats: ['drought','poaching_lion','locust_swarm','wildfire'],
+  },
+  {
+    num: 4, name: 'Arctic Tundra', emoji: '🧊', yearsNeeded: 10, actionsPerTurn: 3,
+    species: [
+      { id:'lichen',   name:'Lichen & Moss', emoji:'🌱', role:'Producer',           tier:0, pop:70, min:20, max:110, color:'#a5d6a7' },
+      { id:'arcticgrass',name:'Arctic Grass',emoji:'🌾', role:'Producer',           tier:0, pop:55, min:15, max:90,  color:'#c5e1a5' },
+      { id:'willow',   name:'Arctic Willow', emoji:'🌿', role:'Producer',           tier:0, pop:40, min:10, max:70,  color:'#81c784' },
+      { id:'lemming',  name:'Lemmings',      emoji:'🐭', role:'Primary Consumer',   tier:1, pop:80, min:15, max:120, color:'#ffe082' },
+      { id:'caribou',  name:'Caribou',       emoji:'🦌', role:'Primary Consumer',   tier:1, pop:45, min:10, max:80,  color:'#a1887f' },
+      { id:'musk',     name:'Musk Oxen',     emoji:'🦬', role:'Primary Consumer',   tier:1, pop:28, min:7,  max:55,  color:'#795548' },
+      { id:'owl',      name:'Snowy Owls',    emoji:'🦉', role:'Secondary Consumer', tier:2, pop:20, min:5,  max:40,  color:'#eceff1' },
+      { id:'arctic_fox',name:'Arctic Foxes', emoji:'🦊', role:'Secondary Consumer', tier:2, pop:22, min:5,  max:42,  color:'#e0e0e0' },
+      { id:'bear',     name:'Polar Bears',   emoji:'🐻‍❄️',role:'Apex Predator',      tier:3, pop:12, min:3,  max:25,  color:'#b0bec5' },
+      { id:'wolf2',    name:'Arctic Wolves', emoji:'🐺', role:'Apex Predator',      tier:3, pop:15, min:4,  max:30,  color:'#cfd8dc' },
+      { id:'raven',    name:'Ravens',        emoji:'🐦', role:'Decomposer',         tier:4, pop:35, min:8,  max:60,  color:'#455a64' },
+    ],
+    eats: { lemming:'lichen,arcticgrass', caribou:'lichen,arcticgrass,willow', musk:'arcticgrass,willow', owl:'lemming', arctic_fox:'lemming', bear:'caribou,musk', wolf2:'caribou,lemming,musk', raven:'all_dead' },
+    facts: ['Polar bears are nearly invisible in snow — a structural adaptation!','Lemming populations naturally cycle up and down every 3–5 years.','Arctic food chains are short because extreme cold limits biodiversity.','Musk oxen form tight circles to protect their young from wolf attacks!','Arctic foxes change their fur from white in winter to brown in summer — camouflage!'],
+    threats: ['ice_melt','oil_spill','snowstorm','overgrazing'],
+  },
+  {
+    num: 5, name: 'Rainforest', emoji: '🌴', yearsNeeded: 12, actionsPerTurn: 2,
+    species: [
+      { id:'canopy',   name:'Canopy Trees',  emoji:'🌳', role:'Producer',           tier:0, pop:90, min:25, max:130, color:'#2e7d32' },
+      { id:'ferns',    name:'Forest Ferns',  emoji:'🌿', role:'Producer',           tier:0, pop:75, min:20, max:110, color:'#43a047' },
+      { id:'orchid',   name:'Orchids',       emoji:'🌸', role:'Producer',           tier:0, pop:60, min:15, max:95,  color:'#e91e63' },
+      { id:'monkey',   name:'Monkeys',       emoji:'🐒', role:'Primary Consumer',   tier:1, pop:55, min:12, max:90,  color:'#8d6e63' },
+      { id:'parrot',   name:'Parrots',       emoji:'🦜', role:'Primary Consumer',   tier:1, pop:50, min:10, max:85,  color:'#e53935' },
+      { id:'toucan',   name:'Toucans',       emoji:'🦅', role:'Primary Consumer',   tier:1, pop:40, min:8,  max:70,  color:'#ff8f00' },
+      { id:'tapir',    name:'Tapirs',        emoji:'🦏', role:'Primary Consumer',   tier:1, pop:22, min:5,  max:45,  color:'#795548' },
+      { id:'snake',    name:'Boa Constrictors',emoji:'🐍',role:'Secondary Consumer',tier:2, pop:30, min:7,  max:55,  color:'#558b2f' },
+      { id:'jaguar',   name:'Jaguars',       emoji:'🐆', role:'Apex Predator',      tier:3, pop:14, min:3,  max:28,  color:'#f9a825' },
+      { id:'harpy',    name:'Harpy Eagles',  emoji:'🦅', role:'Apex Predator',      tier:3, pop:10, min:3,  max:22,  color:'#546e7a' },
+      { id:'beetle',   name:'Beetles',       emoji:'🪲', role:'Decomposer',         tier:4, pop:85, min:25, max:120, color:'#1b5e20' },
+      { id:'termite',  name:'Termites',      emoji:'🐜', role:'Decomposer',         tier:4, pop:90, min:28, max:130, color:'#795548' },
+    ],
+    eats: { monkey:'canopy,ferns,orchid', parrot:'canopy,orchid', toucan:'canopy,orchid', tapir:'ferns,orchid', snake:'monkey,parrot', jaguar:'monkey,snake,tapir', harpy:'monkey,toucan,parrot', beetle:'all_dead', termite:'all_dead' },
+    facts: ['Rainforests cover only 6% of Earth but hold over 50% of all species!','Jaguars are ambush predators — they wait in trees to pounce.','Rainforests are the "lungs of the Earth" — they absorb huge amounts of CO₂.','Harpy eagles have 2m wingspans and are powerful enough to snatch monkeys from trees!','Termites decompose 90% of dead wood in tropical forests — vital to nutrient cycling!','Orchids have co-evolved with specific pollinators — lose the bee, lose the flower!'],
+    threats: ['deforestation','climate_shift','disease','invasive_species'],
+  },
+];
+
+// ═══════════════════════════════════════════════════
+//  THREAT DEFINITIONS
+// ═══════════════════════════════════════════════════
+const THREATS = {
+  drought:           { name:'Drought!',           icon:'☀️',  color:'#ff8f00', desc:'Prolonged drought withers plant life.', effects:{ producers:-15, decomposers:-5  }, type:'environmental' },
+  overhunting_wolf:  { name:'Wolf Poaching!',      icon:'🔫',  color:'#e53935', desc:'Illegal hunters have reduced the wolf pack.', effects:{ wolf:-15 }, type:'human' },
+  invasive_vine:     { name:'Invasive Vines!',     icon:'🌿',  color:'#558b2f', desc:'Invasive kudzu vines smother native plants.', effects:{ trees:-10, berries:-10 }, type:'biological' },
+  fire:              { name:'Forest Fire!',        icon:'🔥',  color:'#e53935', desc:'Wildfire sweeps through, burning vegetation.', effects:{ producers:-20, primary:-8 }, type:'environmental' },
+  ocean_warming:     { name:'Ocean Warming!',      icon:'🌡️',  color:'#ff5722', desc:'Rising temperatures bleach coral and harm algae.', effects:{ algae:-18, krill:-8 }, type:'environmental' },
+  plastic_pollution: { name:'Plastic Pollution!',  icon:'🗑️',  color:'#607d8b', desc:'Plastic waste is choking marine life.', effects:{ fish:-10, whale:-8, seal:-5 }, type:'human' },
+  overfishing:       { name:'Overfishing!',        icon:'🎣',  color:'#1565c0', desc:'Industrial fishing removes too many fish.', effects:{ fish:-18, shark:-5 }, type:'human' },
+  algae_bloom:       { name:'Toxic Algae Bloom!',  icon:'💚',  color:'#2e7d32', desc:'Pollution causes algae to explosively overgrow.', effects:{ algae:+25, krill:-10, fish:-10 }, type:'biological' },
+  poaching_lion:     { name:'Lion Poaching!',      icon:'🔫',  color:'#e53935', desc:'Trophy hunters reduce the lion pride.', effects:{ lion:-14, hyena:+10 }, type:'human' },
+  locust_swarm:      { name:'Locust Swarm!',       icon:'🦗',  color:'#afb42b', desc:'Millions of locusts devour all vegetation.', effects:{ grass:-22, acacia:-12 }, type:'biological' },
+  wildfire:          { name:'Savanna Wildfire!',   icon:'🔥',  color:'#e53935', desc:'Drought-fuelled wildfire burns the savanna.', effects:{ grass:-18, acacia:-10 }, type:'environmental' },
+  ice_melt:          { name:'Sea Ice Melting!',    icon:'🌊',  color:'#0288d1', desc:'Warming Arctic melts the sea ice polar bears rely on.', effects:{ bear:-16, caribou:-8 }, type:'environmental' },
+  oil_spill:         { name:'Oil Spill!',          icon:'🛢️',  color:'#37474f', desc:'Oil contaminates the tundra water supply.', effects:{ lichen:-14, bear:-8 }, type:'human' },
+  snowstorm:         { name:'Blizzard!',           icon:'❄️',  color:'#90caf9', desc:'A deadly blizzard traps animals and buries plants.', effects:{ lichen:-12, caribou:-12, lemming:-10 }, type:'environmental' },
+  overgrazing:       { name:'Overgrazing!',        icon:'🦌',  color:'#8d6e63', desc:'Too many caribou have stripped the tundra bare.', effects:{ lichen:-18, caribou:+8 }, type:'population' },
+  deforestation:     { name:'Deforestation!',      icon:'🪓',  color:'#795548', desc:'Loggers have cleared a section of rainforest.', effects:{ canopy:-20, ferns:-12, monkey:-8 }, type:'human' },
+  climate_shift:     { name:'Climate Shift!',      icon:'🌡️',  color:'#ff5722', desc:'Changing rainfall patterns affect plant growth.', effects:{ canopy:-10, ferns:-10 }, type:'environmental' },
+  disease:           { name:'Disease Outbreak!',   icon:'🦠',  color:'#e53935', desc:'A pathogen spreads through the monkey population.', effects:{ monkey:-18, snake:-5 }, type:'biological' },
+  invasive_species:  { name:'Invasive Snake!',     icon:'🐍',  color:'#33691e', desc:'An invasive predator is hunting unchecked.', effects:{ parrot:-16, monkey:-10 }, type:'biological' },
+};
+
+// Ecology facts to cycle through
+const ECO_FACTS = [
+  { title:'🐺 Trophic Cascade', text:'Removing wolves from Yellowstone caused deer to overgraze, rivers to erode, and entire ecosystems to change.' },
+  { title:'🌿 Producer Role', text:'Producers (plants & algae) capture sun energy. Without them, no other life in the food chain is possible.' },
+  { title:'🍄 Decomposers', text:'Decomposers break down dead matter and recycle nutrients back to the soil — they\'re the cleanup crew!' },
+  { title:'10% Energy Rule', text:'Only ~10% of energy transfers between trophic levels. That\'s why food chains rarely have more than 4–5 steps.' },
+  { title:'🌍 Biodiversity', text:'More species = more stable ecosystem. Single-species die-offs are less likely when many species share roles.' },
+  { title:'⚖️ Balance', text:'Predators control prey populations — preventing overgrazing and keeping ecosystems from tipping into collapse.' },
+  { title:'🌊 Ocean Producers', text:'Ocean algae and phytoplankton produce over 50% of Earth\'s oxygen — more than all land forests combined!' },
+  { title:'🔗 Interdependence', text:'Every species is connected. When one disappears, the ripple effect touches every other organism in the web.' },
+];
+
+// ═══════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════
+let selectedLevel = 0, unlockedLevels = new Set([0]), completedLevels = new Set();
+let gameSpecies = [], currentThreat = null, turn = 0, score = 0, actionsLeft = 0;
+let gameRunning = false, lastRetryLevel = 0, factIdx = 0;
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+window.onload = () => { buildEcoBg(); buildLevelCards(); };
+
+function buildEcoBg(){
+  const c = document.getElementById('ecoBg');
+  const emojis = ['🌿','🍃','🌱','🦋','🌸','🍀','🌾','🦜','🐝','🌺','🍂','🦗'];
+  for(let i=0;i<18;i++){
+    const el=document.createElement('div'); el.className='eco-particle';
+    el.textContent=emojis[i%emojis.length];
+    el.style.left=Math.random()*100+'vw';
+    el.style.animationDuration=(10+Math.random()*16)+'s';
+    el.style.animationDelay=(-Math.random()*18)+'s';
+    el.style.fontSize=(1+Math.random()*2)+'rem';
+    c.appendChild(el);
+  }
+}
+
+function buildLevelCards(){
+  const grid=document.getElementById('levelCards'); grid.innerHTML='';
+  BIOMES.forEach((b,i)=>{
+    const locked=!unlockedLevels.has(i), done=completedLevels.has(i);
+    const card=document.createElement('div');
+    card.className='lvl-card'+(locked?' locked':'')+(done?' done':'')+(selectedLevel===i&&!locked?' selected':'');
+    card.innerHTML=`${done?'<span class="lc-star">⭐</span>':''}<div class="lc-num">${locked?'🔒':b.num}</div><span class="lc-biome">${b.emoji}</span><div class="lc-name">${b.name}</div>`;
+    if(!locked) card.addEventListener('click',()=>{ selectedLevel=i; buildLevelCards(); });
+    grid.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  START GAME
+// ═══════════════════════════════════════════════════
+function startGame(){
+  lastRetryLevel=selectedLevel;
+  initLevel(selectedLevel);
+}
+
+function initLevel(idx){
+  const biome=BIOMES[idx];
+  gameSpecies=biome.species.map(s=>({...s, pop:s.pop})); // deep copy pops
+  turn=0; score=0; actionsLeft=biome.actionsPerTurn; currentThreat=null; gameRunning=true; factIdx=0;
+  document.getElementById('hudLevel').textContent=biome.num;
+  document.getElementById('hudBiome').textContent=biome.emoji+' '+biome.name;
+  document.getElementById('hudScore').textContent=0;
+  document.getElementById('turnDisplay').textContent=0;
+  document.getElementById('targetDisplay').textContent='Goal: survive '+biome.yearsNeeded+' years';
+  document.getElementById('actionsDisplay').textContent=actionsLeft;
+  renderSpecies();
+  setThreat(null);
+  updateHealthBar();
+  setFact(biome.facts[0]);
+  showScreen('gameScreen');
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER SPECIES
+// ═══════════════════════════════════════════════════
+function renderSpecies(){
+  const biome=BIOMES[selectedLevel];
+  const panel=document.getElementById('foodWebPanel');
+  panel.innerHTML='<div class="fwp-title">🌿 FOOD WEB — '+BIOMES[selectedLevel].name+'</div>';
+
+  const tiers=[
+    {label:'🌱 Producers (make food)',         tier:0},
+    {label:'🐾 Primary Consumers (eat plants)', tier:1},
+    {label:'🦊 Secondary Consumers',            tier:2},
+    {label:'🦅 Apex Predators',                 tier:3},
+    {label:'🍄 Decomposers',                    tier:4},
+  ];
+
+  tiers.forEach(t=>{
+    const species=gameSpecies.filter(s=>s.tier===t.tier);
+    if(!species.length) return;
+    const lbl=document.createElement('div'); lbl.className='tier-label'; lbl.textContent=t.label;
+    panel.appendChild(lbl);
+    species.forEach(s=>{
+      const pct=Math.round((s.pop/s.max)*100);
+      const status=s.pop<=s.min+5?'critical':s.pop<s.min*2.5?'warning':'thriving';
+      const barColor=status==='critical'?'#e53935':status==='warning'?'#ffb300':s.color;
+      const row=document.createElement('div');
+      row.className='species-row '+status; row.id='row_'+s.id;
+      row.innerHTML=`
+        <div class="sr-header">
+          <span class="sr-emoji">${s.emoji}</span>
+          <div class="sr-info">
+            <div class="sr-name">${s.name}</div>
+            <div class="sr-role">${s.role}</div>
+          </div>
+          <div class="sr-pop" style="color:${barColor}">${Math.round(s.pop)}</div>
+          <div class="sr-controls">
+            <button class="sr-btn sr-btn-plus"  onclick="adjustPop('${s.id}',+1)" ${actionsLeft<=0?'disabled':''}>+</button>
+            <button class="sr-btn sr-btn-minus" onclick="adjustPop('${s.id}',-1)" ${actionsLeft<=0?'disabled':''}>−</button>
+          </div>
+        </div>
+        <div class="sr-cost">1 action per click · ${s.min} min / ${s.max} max</div>
+        <div class="pop-bar-wrap"><div class="pop-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      `;
+      panel.appendChild(row);
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  ADJUST POPULATION
+// ═══════════════════════════════════════════════════
+function adjustPop(id, dir){
+  if(actionsLeft<=0) return;
+  const s=gameSpecies.find(s=>s.id===id); if(!s) return;
+  const change=dir>0?12:-12;
+  s.pop=Math.min(s.max, Math.max(s.min, s.pop+change));
+  actionsLeft--;
+  document.getElementById('actionsDisplay').textContent=actionsLeft;
+  score+=dir>0?5:3;
+  document.getElementById('hudScore').textContent=score;
+  renderSpecies();
+  updateHealthBar();
+  triggerCascade(id, dir);
+}
+
+// Simple cascade: adjusting one species slightly affects connected ones
+function triggerCascade(id, dir){
+  const biome=BIOMES[selectedLevel];
+  const eatsMap=biome.eats;
+  // If we added predators, prey decreases slightly; if we removed predators, prey increases slightly
+  gameSpecies.forEach(s=>{
+    if(eatsMap[s.id]&&eatsMap[s.id].includes(id)){
+      // s eats the changed species — predator change affects prey
+      if(dir>0) s.pop=Math.max(s.min, s.pop-3); // more predators = slightly less prey
+      else      s.pop=Math.min(s.max, s.pop+3);  // fewer predators = slightly more prey
+    }
+    if(eatsMap[id]&&eatsMap[id].includes(s.id)){
+      // the changed species eats s — prey change affects predator
+      if(dir>0) s.pop=Math.min(s.max, s.pop+2); // more of this species means its food rises slightly
+      else      s.pop=Math.max(s.min, s.pop-2);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  NEXT TURN
+// ═══════════════════════════════════════════════════
+function nextTurn(){
+  if(!gameRunning) return;
+  turn++;
+  document.getElementById('turnDisplay').textContent=turn;
+  score+=10;
+
+  const biome=BIOMES[selectedLevel];
+
+  // Apply current threat effects
+  if(currentThreat){
+    applyThreatEffects(currentThreat);
+    currentThreat=null;
+  }
+
+  // Natural population dynamics (each species shifts toward balance)
+  applyNaturalDynamics();
+
+  // Score update
+  document.getElementById('hudScore').textContent=score;
+
+  // Check for collapse
+  const collapsed=gameSpecies.find(s=>s.pop<=s.min);
+  if(collapsed){
+    endGame(false, collapsed);
+    return;
+  }
+
+  // Check win
+  if(turn>=biome.yearsNeeded){
+    endGame(true, null);
+    return;
+  }
+
+  // New threat every 2–3 turns
+  if(turn%2===0||Math.random()<0.4){
+    const pool=biome.threats;
+    const key=pool[Math.floor(Math.random()*pool.length)];
+    currentThreat=key;
+    setThreat(THREATS[key]);
+  } else {
+    setThreat(null);
+  }
+
+  // Cycle fact
+  factIdx=(factIdx+1)%ECO_FACTS.length;
+  const bf=biome.facts[turn%biome.facts.length]||ECO_FACTS[factIdx].text;
+  setFact(bf);
+
+  // Reset actions
+  actionsLeft=biome.actionsPerTurn;
+  document.getElementById('actionsDisplay').textContent=actionsLeft;
+
+  renderSpecies();
+  updateHealthBar();
+}
+
+function applyThreatEffects(threatKey){
+  const threat=THREATS[threatKey]; if(!threat) return;
+  const biome=BIOMES[selectedLevel];
+  Object.entries(threat.effects).forEach(([target,delta])=>{
+    if(target==='producers'){
+      gameSpecies.filter(s=>s.tier===0).forEach(s=>{ s.pop=Math.max(s.min,s.pop+delta); });
+    } else if(target==='primary'){
+      gameSpecies.filter(s=>s.tier===1).forEach(s=>{ s.pop=Math.max(s.min,s.pop+delta); });
+    } else if(target==='decomposers'){
+      gameSpecies.filter(s=>s.tier===4).forEach(s=>{ s.pop=Math.max(s.min,s.pop+delta); });
+    } else {
+      const sp=gameSpecies.find(s=>s.id===target);
+      if(sp) sp.pop=Math.min(sp.max,Math.max(sp.min,sp.pop+delta));
+    }
+  });
+  // Cascade from threat
+  gameSpecies.forEach(s=>{
+    const ate=biome.eats[s.id];
+    if(!ate) return;
+    const prey=gameSpecies.filter(p=>ate.includes(p.id));
+    if(!prey.length) return;
+    const avgPreyPct=prey.reduce((a,p)=>a+(p.pop/p.max),0)/prey.length;
+    if(avgPreyPct<0.35) s.pop=Math.max(s.min, s.pop-6);
+    else if(avgPreyPct>0.8) s.pop=Math.min(s.max, s.pop+4);
+  });
+}
+
+function applyNaturalDynamics(){
+  // Small natural fluctuations — populations drift toward mid-range
+  gameSpecies.forEach(s=>{
+    const mid=(s.min+s.max)/2;
+    const drift=(mid-s.pop)*0.04;
+    s.pop=Math.min(s.max, Math.max(s.min, s.pop+drift+(Math.random()-0.5)*4));
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════
+function updateHealthBar(){
+  const avgPct=gameSpecies.reduce((a,s)=>a+(s.pop-s.min)/(s.max-s.min),0)/gameSpecies.length;
+  const health=Math.round(avgPct*100);
+  const bar=document.getElementById('healthBar');
+  bar.style.width=health+'%';
+  bar.style.background=health<30?'linear-gradient(90deg,#e53935,#ff5722)':health<60?'linear-gradient(90deg,#ffb300,#ffd54f)':'linear-gradient(90deg,#7cb842,#b5e550)';
+  bar.style.boxShadow=health<30?'0 0 12px rgba(229,57,53,0.5)':'0 0 12px rgba(124,184,66,0.5)';
+  document.getElementById('healthPct').textContent=health+'%';
+  document.getElementById('hudHealth').textContent=health+'%';
+  document.getElementById('hudHealth').style.color=health<30?'var(--red)':health<60?'var(--amber)':'var(--green)';
+}
+
+function setThreat(threat){
+  const area=document.getElementById('threatArea');
+  if(!threat){
+    area.innerHTML='<div class="no-threat"><span class="nt-icon">🌤️</span>Ecosystem stable.<br>Use your actions wisely before next year!</div>';
+    return;
+  }
+  const effectLines=Object.entries(threat.effects).map(([t,d])=>{
+    const name=t==='producers'?'All Producers':t==='primary'?'Primary Consumers':t==='decomposers'?'Decomposers':gameSpecies.find(s=>s.id===t)?.name||t;
+    return `${name}: ${d>0?'+':''}${d}`;
+  }).join(' · ');
+  area.innerHTML=`
+    <div class="threat-card">
+      <div class="tc-header">
+        <span class="tc-icon">${threat.icon}</span>
+        <div><div class="tc-title">${threat.name}</div><div class="tc-type">${threat.type} threat</div></div>
+      </div>
+      <div class="tc-desc">${threat.desc}</div>
+      <div class="tc-effect">Effect next year: ${effectLines}</div>
+    </div>`;
+}
+
+function setFact(text){
+  const ef=ECO_FACTS[factIdx];
+  document.getElementById('factBox').innerHTML=`<strong>${ef.title}</strong>${text}`;
+}
+
+function showToast(msg,color='var(--lime)'){
+  const old=document.querySelector('.toast'); if(old) old.remove();
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg; t.style.color=color;
+  document.body.appendChild(t); setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity 0.4s'; setTimeout(()=>t.remove(),400); },2000);
+}
+
+// ═══════════════════════════════════════════════════
+//  END GAME
+// ═══════════════════════════════════════════════════
+function endGame(won, collapsedSpecies){
+  gameRunning=false;
+  const biome=BIOMES[selectedLevel];
+  if(won){ completedLevels.add(selectedLevel); if(selectedLevel+1<BIOMES.length) unlockedLevels.add(selectedLevel+1); }
+
+  const surviving=gameSpecies.filter(s=>s.pop>s.min+2).length;
+  const stars=won&&surviving===gameSpecies.length?'⭐⭐⭐':won?'⭐⭐':turn>=biome.yearsNeeded/2?'⭐':'';
+
+  let icon,title,sub;
+  if(won&&surviving===gameSpecies.length){ icon='🏆'; title='THRIVING ECOSYSTEM!'; sub='Every species survived! You\'re a master ecologist!'; }
+  else if(won)                           { icon='🥇'; title='ECOSYSTEM SAVED!';     sub='You kept the food web alive for '+turn+' years!'; }
+  else if(turn>=biome.yearsNeeded*0.6)   { icon='🥈'; title='SO CLOSE!';            sub=(collapsedSpecies?collapsedSpecies.name+' went extinct!':'A species collapsed.')+ ' '+turn+' years survived.'; }
+  else                                   { icon='💀'; title='COLLAPSE!';            sub=(collapsedSpecies?collapsedSpecies.name+' went extinct, triggering a cascade!':'The ecosystem collapsed.'); }
+
+  const fact=won
+    ?`<strong>🌍 What you learned:</strong> Keeping all trophic levels balanced is key — every species has a role in the food web!`
+    :`<strong>💡 What happened:</strong> When ${collapsedSpecies?collapsedSpecies.name+' disappeared':'a key species went extinct'}, the whole food web was destabilized. In nature, this is called a <em>trophic cascade</em>.`;
+
+  document.getElementById('resIcon').textContent=icon;
+  document.getElementById('resTitle').textContent=title;
+  document.getElementById('resSub').textContent=sub;
+  document.getElementById('resYears').textContent=turn;
+  document.getElementById('resScore2').textContent=score;
+  document.getElementById('resSaved').textContent=surviving+'/'+gameSpecies.length;
+  document.getElementById('resFact').innerHTML=fact;
+  document.getElementById('resStars').textContent=stars||'Keep going!';
+
+  showScreen('resultsScreen');
+  if(won) spawnConfetti(won&&surviving===gameSpecies.length?90:50);
+}
+
+// ═══════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════
+function retryGame(){ selectedLevel=lastRetryLevel; initLevel(selectedLevel); }
+function goMenu(){ gameRunning=false; showScreen('menuScreen'); buildLevelCards(); }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+// ═══════════════════════════════════════════════════
+//  CONFETTI
+// ═══════════════════════════════════════════════════
+function spawnConfetti(n){
+  const layer=document.getElementById('confLayer'); layer.innerHTML='';
+  const cols=['#7cb842','#b5e550','#ffb300','#4fc3f7','#ff6b9d','#e8f5e9','#fff'];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div'); el.className='cp';
+    el.style.left=Math.random()*100+'vw'; el.style.background=cols[Math.floor(Math.random()*cols.length)];
+    el.style.width=(5+Math.random()*9)+'px'; el.style.height=(5+Math.random()*9)+'px';
+    el.style.animationDuration=(1.8+Math.random()*2.5)+'s'; el.style.animationDelay=(Math.random()*1.5)+'s';
+    el.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    layer.appendChild(el); el.addEventListener('animationend',()=>el.remove());
+  }
+}
+</script>
+</body>
+</html>
